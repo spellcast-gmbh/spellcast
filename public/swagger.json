@@ -10,6 +10,10 @@
   },
   "servers": [
     {
+      "url": "https://spellcast-ten.vercel.app/api",
+      "description": "Production server"
+    },
+    {
       "url": "/api",
       "description": "Development server"
     }
@@ -501,6 +505,42 @@
           }
         },
         "required": ["title", "teamId"]
+      },
+      "UpdateIssueRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the issue"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the issue"
+          },
+          "assigneeId": {
+            "type": "string",
+            "description": "The user to assign the issue to (accepts user UUID, email, username, or display name)"
+          },
+          "priority": {
+            "type": "number",
+            "description": "The priority level of the issue"
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of label IDs to attach to the issue"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "The project to attach the issue to (accepts project UUID or name)"
+          },
+          "stateId": {
+            "type": "string",
+            "description": "The state to set for the issue (accepts state UUID or name)"
+          }
+        }
       },
       "IssueResponse": {
         "type": "object",
