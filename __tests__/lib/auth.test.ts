@@ -25,24 +25,12 @@ describe('Authentication utilities', () => {
       expect(validateApiKey(request)).toBe(true);
     });
 
-    it('should return true for valid API key in query parameter', () => {
-      const request = createMockRequest('http://localhost:3000/api/test?Bearer=test-api-key');
-
-      expect(validateApiKey(request)).toBe(true);
-    });
-
     it('should return false for invalid Bearer token', () => {
       const request = createMockRequest('http://localhost:3000/api/test', {
         headers: {
           'authorization': 'Bearer invalid-key',
         },
       });
-
-      expect(validateApiKey(request)).toBe(false);
-    });
-
-    it('should return false for invalid query parameter', () => {
-      const request = createMockRequest('http://localhost:3000/api/test?Bearer=invalid-key');
 
       expect(validateApiKey(request)).toBe(false);
     });

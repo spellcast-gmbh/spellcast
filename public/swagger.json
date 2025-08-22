@@ -1,8 +1,8 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "Spellcast Linear API",
-    "description": "API for managing Linear issues through Spellcast with smart name-to-ID translation. All endpoints require authentication using either a Bearer token in the Authorization header or a Bearer query parameter. The API automatically resolves human-readable names to Linear IDs: use team names/keys, user emails/names, project names, and state names instead of UUIDs. The API supports setting a default project via the DEFAULT_PROJECT_ID environment variable.",
+    "description": "API for managing Linear issues through Spellcast with smart name-to-ID translation. All endpoints require authentication using a Bearer token in the Authorization header. The API automatically resolves human-readable names to Linear IDs: use team names/keys, user emails/names, project names, and state names instead of UUIDs. The API supports setting a default project via the DEFAULT_PROJECT_ID environment variable.",
     "version": "1.0.0",
     "contact": {
       "name": "Spellcast API Support"
@@ -17,15 +17,13 @@
   "paths": {
     "/linear/list": {
       "get": {
+        "operationId": "listLinearIssues",
         "summary": "List Linear issues",
         "description": "Retrieve a paginated list of Linear issues with optional filtering",
         "tags": ["Linear Issues"],
         "security": [
           {
             "BearerAuth": []
-          },
-          {
-            "QueryAuth": []
           }
         ],
         "parameters": [
@@ -98,15 +96,13 @@
     },
     "/linear/search": {
       "get": {
+        "operationId": "searchLinearIssues",
         "summary": "Search Linear issues",
         "description": "Search and filter Linear issues by various criteria",
         "tags": ["Linear Issues"],
         "security": [
           {
             "BearerAuth": []
-          },
-          {
-            "QueryAuth": []
           }
         ],
         "parameters": [
@@ -214,15 +210,13 @@
     },
     "/linear/create": {
       "post": {
+        "operationId": "createLinearIssue",
         "summary": "Create a new Linear issue",
         "description": "Create a new issue in Linear with the provided details",
         "tags": ["Linear Issues"],
         "security": [
           {
             "BearerAuth": []
-          },
-          {
-            "QueryAuth": []
           }
         ],
         "requestBody": {
@@ -271,15 +265,13 @@
     },
     "/linear/{id}": {
       "get": {
+        "operationId": "getLinearIssue",
         "summary": "Get a specific Linear issue",
         "description": "Retrieve a specific Linear issue by its ID",
         "tags": ["Linear Issues"],
         "security": [
           {
             "BearerAuth": []
-          },
-          {
-            "QueryAuth": []
           }
         ],
         "parameters": [
@@ -325,6 +317,80 @@
             }
           }
         }
+      },
+      "put": {
+        "operationId": "updateLinearIssue",
+        "summary": "Update a Linear issue",
+        "description": "Update an existing Linear issue with the provided details",
+        "tags": ["Linear Issues"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Linear issue to update",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIssueRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -334,12 +400,6 @@
         "type": "http",
         "scheme": "bearer",
         "description": "API key authentication using Bearer token in Authorization header"
-      },
-      "QueryAuth": {
-        "type": "apiKey",
-        "in": "query",
-        "name": "Bearer",
-        "description": "API key authentication using Bearer query parameter"
       }
     },
     "schemas": {

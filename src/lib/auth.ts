@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 /**
- * Validates API key from either Authorization header (Bearer token) or query parameter
+ * Validates API key from Authorization header (Bearer token)
  * @param request - Next.js request object
  * @returns boolean - true if authentication is valid
  */
@@ -20,13 +20,6 @@ export function validateApiKey(request: NextRequest): boolean {
     if (token === apiKey) {
       return true;
     }
-  }
-
-  // Check query parameter
-  const url = new URL(request.url);
-  const queryApiKey = url.searchParams.get('Bearer');
-  if (queryApiKey === apiKey) {
-    return true;
   }
 
   return false;
