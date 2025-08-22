@@ -1,0 +1,665 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Spellcast Linear API",
+    "description": "API for managing Linear issues through Spellcast with smart name-to-ID translation. All endpoints require authentication using either a Bearer token in the Authorization header or a Bearer query parameter. The API automatically resolves human-readable names to Linear IDs: use team names/keys, user emails/names, project names, and state names instead of UUIDs. The API supports setting a default project via the DEFAULT_PROJECT_ID environment variable.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Spellcast API Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/linear/list": {
+      "get": {
+        "summary": "List Linear issues",
+        "description": "Retrieve a paginated list of Linear issues with optional filtering",
+        "tags": ["Linear Issues"],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "QueryAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of issues to return (1-100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of issues to skip for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "description": "Filter issues by team (accepts team UUID, name, or key)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved issues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/linear/search": {
+      "get": {
+        "summary": "Search Linear issues",
+        "description": "Search and filter Linear issues by various criteria",
+        "tags": ["Linear Issues"],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "QueryAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "Text query to search in issue titles and descriptions",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "description": "Filter by team (accepts team UUID, name, or key)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assigneeId",
+            "in": "query",
+            "description": "Filter by assignee (accepts user UUID, email, username, or display name)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stateId",
+            "in": "query",
+            "description": "Filter by state (accepts state UUID or name)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "query",
+            "description": "Filter by project (accepts project UUID or name)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of issues to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of issues to skip for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/linear/create": {
+      "post": {
+        "summary": "Create a new Linear issue",
+        "description": "Create a new issue in Linear with the provided details",
+        "tags": ["Linear Issues"],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "QueryAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIssueRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully created issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/linear/{id}": {
+      "get": {
+        "summary": "Get a specific Linear issue",
+        "description": "Retrieve a specific Linear issue by its ID",
+        "tags": ["Linear Issues"],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "QueryAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Linear issue to retrieve",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key authentication using Bearer token in Authorization header"
+      },
+      "QueryAuth": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "Bearer",
+        "description": "API key authentication using Bearer query parameter"
+      }
+    },
+    "schemas": {
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the issue"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the issue"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "The description of the issue"
+          },
+          "number": {
+            "type": "number",
+            "description": "The sequential number of the issue"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL to view the issue in Linear"
+          },
+          "priority": {
+            "type": "number",
+            "nullable": true,
+            "description": "The priority level of the issue"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the issue was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the issue was last updated"
+          },
+          "team": {
+            "$ref": "#/components/schemas/TeamInfo",
+            "description": "The team this issue belongs to"
+          },
+          "assignee": {
+            "$ref": "#/components/schemas/UserInfo",
+            "description": "The user assigned to this issue"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectInfo",
+            "description": "The project this issue is attached to"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateInfo",
+            "description": "The current state of this issue"
+          }
+        },
+        "required": ["id", "title", "number", "url", "createdAt", "updatedAt"]
+      },
+      "CreateIssueRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the issue"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the issue"
+          },
+          "teamId": {
+            "type": "string",
+            "description": "The team to create the issue in (accepts team UUID, name, or key)"
+          },
+          "assigneeId": {
+            "type": "string",
+            "description": "The user to assign the issue to (accepts user UUID, email, username, or display name)"
+          },
+          "priority": {
+            "type": "number",
+            "description": "The priority level of the issue"
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of label IDs to attach to the issue"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "The project to attach the issue to (accepts project UUID or name). If not provided, the DEFAULT_PROJECT_ID environment variable will be used if set."
+          },
+          "stateId": {
+            "type": "string",
+            "description": "The state to set for the issue (accepts state UUID or name)"
+          }
+        },
+        "required": ["title", "teamId"]
+      },
+      "IssueResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/Issue"
+          }
+        },
+        "required": ["success", "data"]
+      },
+      "IssueListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "issues": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Issue"
+                }
+              },
+              "totalCount": {
+                "type": "number",
+                "description": "Total number of issues returned"
+              },
+              "hasNextPage": {
+                "type": "boolean",
+                "description": "Whether there are more issues available"
+              },
+              "hasPreviousPage": {
+                "type": "boolean",
+                "description": "Whether there are previous issues available"
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "number",
+                    "description": "The limit used for pagination"
+                  },
+                  "offset": {
+                    "type": "number",
+                    "description": "The offset used for pagination"
+                  }
+                },
+                "required": ["limit", "offset"]
+              }
+            },
+            "required": ["issues", "totalCount", "hasNextPage", "hasPreviousPage", "pagination"]
+          }
+        },
+        "required": ["success", "data"]
+      },
+      "IssueSearchResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "issues": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Issue"
+                }
+              },
+              "totalCount": {
+                "type": "number",
+                "description": "Total number of issues returned"
+              },
+              "hasNextPage": {
+                "type": "boolean",
+                "description": "Whether there are more issues available"
+              },
+              "hasPreviousPage": {
+                "type": "boolean",
+                "description": "Whether there are previous issues available"
+              },
+              "appliedFilters": {
+                "type": "object",
+                "description": "The resolved filter information showing both IDs and names",
+                "properties": {
+                  "team": {
+                    "$ref": "#/components/schemas/TeamInfo"
+                  },
+                  "assignee": {
+                    "$ref": "#/components/schemas/UserInfo"
+                  },
+                  "project": {
+                    "$ref": "#/components/schemas/ProjectInfo"
+                  },
+                  "state": {
+                    "$ref": "#/components/schemas/StateInfo"
+                  },
+                  "query": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "The text query used for searching"
+                  }
+                }
+              }
+            },
+            "required": ["issues", "totalCount", "hasNextPage", "hasPreviousPage", "appliedFilters"]
+          }
+        },
+        "required": ["success", "data"]
+      },
+      "TeamInfo": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The team UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "The team name"
+          },
+          "key": {
+            "type": "string",
+            "description": "The team key"
+          }
+        },
+        "required": ["id", "name", "key"]
+      },
+      "UserInfo": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The user UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "The user's full name"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The user's display name"
+          },
+          "email": {
+            "type": "string",
+            "description": "The user's email address"
+          }
+        },
+        "required": ["id", "name", "displayName", "email"]
+      },
+      "ProjectInfo": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The project UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "The project name"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "StateInfo": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The state UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "The state name"
+          },
+          "type": {
+            "type": "string",
+            "description": "The state type (e.g., 'started', 'completed')"
+          },
+          "color": {
+            "type": "string",
+            "description": "The state color (hex color code)"
+          }
+        },
+        "required": ["id", "name", "type", "color"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message describing what went wrong"
+          }
+        },
+        "required": ["success", "error"]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Linear Issues",
+      "description": "Operations related to Linear issue management"
+    }
+  ]
+}
