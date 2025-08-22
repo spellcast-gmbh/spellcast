@@ -17,6 +17,7 @@
   "paths": {
     "/linear/list": {
       "get": {
+        "x-openai-isConsequential": false,
         "operationId": "listLinearIssues",
         "summary": "List Linear issues",
         "description": "Retrieve a paginated list of Linear issues with optional filtering",
@@ -96,6 +97,7 @@
     },
     "/linear/search": {
       "get": {
+        "x-openai-isConsequential": false,
         "operationId": "searchLinearIssues",
         "summary": "Search Linear issues",
         "description": "Search and filter Linear issues by various criteria",
@@ -210,6 +212,7 @@
     },
     "/linear/create": {
       "post": {
+        "x-openai-isConsequential": false,
         "operationId": "createLinearIssue",
         "summary": "Create a new Linear issue",
         "description": "Create a new issue in Linear with the provided details",
@@ -265,6 +268,7 @@
     },
     "/linear/{id}": {
       "get": {
+        "x-openai-isConsequential": false,
         "operationId": "getLinearIssue",
         "summary": "Get a specific Linear issue",
         "description": "Retrieve a specific Linear issue by its ID",
@@ -319,6 +323,7 @@
         }
       },
       "put": {
+        "x-openai-isConsequential": false,
         "operationId": "updateLinearIssue",
         "summary": "Update a Linear issue",
         "description": "Update an existing Linear issue with the provided details",
