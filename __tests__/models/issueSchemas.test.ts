@@ -47,7 +47,7 @@ describe('Issue Schemas', () => {
         title: 'Test Issue',
       };
 
-      await expect(createIssueSchema.validate(invalidData)).rejects.toThrow('Team ID is required');
+      await expect(createIssueSchema.validate(invalidData)).rejects.toThrow('Team ID or name is required');
     });
 
     it('should reject empty title', async () => {

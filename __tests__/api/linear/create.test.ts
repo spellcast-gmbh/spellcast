@@ -11,15 +11,27 @@ jest.doMock('../../../src/lib/linear', () => ({
   linearClient: {
     createIssue: mockCreateIssue,
   },
+  LinearEntityResolver: {
+    resolveTeam: jest.fn(),
+    resolveUser: jest.fn(),
+    resolveProject: jest.fn(),
+    resolveState: jest.fn(),
+    resolveDefaultProject: jest.fn(),
+  },
 }));
 
 describe('/api/linear/create', () => {
   let POST: any;
+  let LinearEntityResolver: any;
 
   beforeAll(async () => {
     // Import the module after setting up mocks
     const module = await import('../../../src/app/api/linear/create/route');
     POST = module.POST;
+    
+    // Import the mocked LinearEntityResolver
+    const linearModule = await import('../../../src/lib/linear');
+    LinearEntityResolver = linearModule.LinearEntityResolver;
   });
 
   beforeEach(() => {
@@ -34,6 +46,13 @@ describe('/api/linear/create', () => {
         teamId: 'team-123',
         priority: 2,
       };
+
+      // Mock LinearEntityResolver methods
+      LinearEntityResolver.resolveTeam.mockResolvedValue({ id: 'team-123', name: 'Test Team', key: 'TEST' });
+      LinearEntityResolver.resolveUser.mockResolvedValue(null);
+      LinearEntityResolver.resolveProject.mockResolvedValue(null);
+      LinearEntityResolver.resolveState.mockResolvedValue(null);
+      LinearEntityResolver.resolveDefaultProject.mockResolvedValue(null);
 
       mockCreateIssue.mockResolvedValue(mockLinearCreateResponse);
 
@@ -59,7 +78,7 @@ describe('/api/linear/create', () => {
       expect(mockCreateIssue).toHaveBeenCalledWith({
         title: issueData.title,
         description: issueData.description,
-        teamId: issueData.teamId,
+        teamId: 'team-123', // Resolved team ID
         assigneeId: undefined,
         priority: issueData.priority,
         labelIds: undefined,
@@ -92,6 +111,13 @@ describe('/api/linear/create', () => {
         title: 'Test Issue',
         teamId: 'team-123',
       };
+
+      // Mock LinearEntityResolver methods
+      LinearEntityResolver.resolveTeam.mockResolvedValue({ id: 'team-123', name: 'Test Team', key: 'TEST' });
+      LinearEntityResolver.resolveUser.mockResolvedValue(null);
+      LinearEntityResolver.resolveProject.mockResolvedValue(null);
+      LinearEntityResolver.resolveState.mockResolvedValue(null);
+      LinearEntityResolver.resolveDefaultProject.mockResolvedValue(null);
 
       mockCreateIssue.mockRejectedValue(new Error('Linear API error'));
 

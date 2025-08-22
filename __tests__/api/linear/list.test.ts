@@ -1,15 +1,22 @@
 import { createMockRequest, mockLinearIssuesResponse } from '../../helpers/testUtils';
 
-// Mock the Linear client before importing the route
-const mockIssues = jest.fn();
-
 jest.mock('../../../src/lib/linear', () => ({
   linearClient: {
-    issues: mockIssues,
+    issues: jest.fn(),
+  },
+  LinearEntityResolver: {
+    resolveTeam: jest.fn(),
+    resolveUser: jest.fn(),
+    resolveProject: jest.fn(),
+    resolveState: jest.fn(),
+    resolveDefaultProject: jest.fn(),
   },
 }));
 
 import { GET } from '../../../src/app/api/linear/list/route';
+import { linearClient, LinearEntityResolver } from '../../../src/lib/linear';
+
+const mockIssues = linearClient.issues as jest.MockedFunction<typeof linearClient.issues>;
 
 describe('/api/linear/list', () => {
   beforeEach(() => {
@@ -72,6 +79,13 @@ describe('/api/linear/list', () => {
 
     it('should list issues filtered by team', async () => {
       mockIssues.mockResolvedValue(mockLinearIssuesResponse);
+      
+      // Mock LinearEntityResolver for team resolution
+      (LinearEntityResolver.resolveTeam as jest.Mock).mockResolvedValue({ 
+        id: 'team-123', 
+        name: 'Test Team', 
+        key: 'TEST' 
+      });
 
       const request = createMockRequest('http://localhost:3000/api/linear/list?teamId=team-123');
 
@@ -132,9 +146,9 @@ describe('/api/linear/list', () => {
       const response = await GET(request);
       const responseData = await response.json();
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
       expect(responseData.success).toBe(false);
-      expect(responseData.error).toBe('Internal server error');
+      expect(responseData.error).toBe('Linear API error');
     });
 
     it('should include pagination metadata', async () => {

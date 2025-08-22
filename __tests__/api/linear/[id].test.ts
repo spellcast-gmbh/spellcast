@@ -1,17 +1,24 @@
 import { createMockRequest, mockLinearIssue, mockLinearCreateResponse } from '../../helpers/testUtils';
 
-// Mock the Linear client before importing the route
-const mockIssue = jest.fn();
-const mockUpdateIssue = jest.fn();
-
 jest.mock('../../../src/lib/linear', () => ({
   linearClient: {
-    issue: mockIssue,
-    updateIssue: mockUpdateIssue,
+    issue: jest.fn(),
+    updateIssue: jest.fn(),
+  },
+  LinearEntityResolver: {
+    resolveTeam: jest.fn(),
+    resolveUser: jest.fn(),
+    resolveProject: jest.fn(),
+    resolveState: jest.fn(),
+    resolveDefaultProject: jest.fn(),
   },
 }));
 
 import { GET, PUT } from '../../../src/app/api/linear/[id]/route';
+import { linearClient, LinearEntityResolver } from '../../../src/lib/linear';
+
+const mockIssue = linearClient.issue as jest.MockedFunction<typeof linearClient.issue>;
+const mockUpdateIssue = linearClient.updateIssue as jest.MockedFunction<typeof linearClient.updateIssue>;
 
 describe('/api/linear/[id]', () => {
   beforeEach(() => {
@@ -78,9 +85,9 @@ describe('/api/linear/[id]', () => {
       const response = await GET(request, { params });
       const responseData = await response.json();
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
       expect(responseData.success).toBe(false);
-      expect(responseData.error).toBe('Internal server error');
+      expect(responseData.error).toBe('Linear API error');
     });
   });
 
@@ -91,6 +98,11 @@ describe('/api/linear/[id]', () => {
         description: 'Updated description',
         priority: 1,
       };
+
+      // Mock LinearEntityResolver methods (not needed for this test but required)
+      (LinearEntityResolver.resolveUser as jest.Mock).mockResolvedValue(null);
+      (LinearEntityResolver.resolveProject as jest.Mock).mockResolvedValue(null);
+      (LinearEntityResolver.resolveState as jest.Mock).mockResolvedValue(null);
 
       mockUpdateIssue.mockResolvedValue(mockLinearCreateResponse);
 
@@ -190,7 +202,7 @@ describe('/api/linear/[id]', () => {
 
       expect(response.status).toBe(400);
       expect(responseData.success).toBe(false);
-      expect(responseData.error).toContain('must not exceed 255 characters');
+      expect(responseData.error).toContain('Priority must be between 0 and 4');
       expect(mockUpdateIssue).not.toHaveBeenCalled();
     });
 
