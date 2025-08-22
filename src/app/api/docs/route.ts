@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Read the swagger.json file from the public directory
     const swaggerPath = join(process.cwd(), 'public', 'swagger.json');

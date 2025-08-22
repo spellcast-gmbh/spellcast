@@ -23,7 +23,7 @@ export function isUUID(str: string): boolean {
 // Entity lookup utilities
 export class LinearEntityResolver {
   // Cache to avoid repeated API calls
-  private static cache = new Map<string, any>();
+  private static cache = new Map<string, unknown>();
   private static cacheExpiry = new Map<string, number>();
   private static CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -32,12 +32,12 @@ export class LinearEntityResolver {
     return expiry ? Date.now() < expiry : false;
   }
 
-  private static setCache(key: string, value: any): void {
+  private static setCache(key: string, value: unknown): void {
     this.cache.set(key, value);
     this.cacheExpiry.set(key, Date.now() + this.CACHE_TTL);
   }
 
-  private static getCache(key: string): any | null {
+  private static getCache(key: string): unknown | null {
     if (this.isCacheValid(key)) {
       return this.cache.get(key);
     }
@@ -50,7 +50,7 @@ export class LinearEntityResolver {
   static async resolveTeam(teamIdOrName: string): Promise<{ id: string; name: string; key: string } | null> {
     const cacheKey = `team:${teamIdOrName}`;
     const cached = this.getCache(cacheKey);
-    if (cached) return cached;
+    if (cached) return cached as { id: string; name: string; key: string };
 
     try {
       // If it's a UUID, get by ID
@@ -85,7 +85,7 @@ export class LinearEntityResolver {
   static async resolveUser(userIdOrNameOrEmail: string): Promise<{ id: string; name: string; email: string; displayName: string } | null> {
     const cacheKey = `user:${userIdOrNameOrEmail}`;
     const cached = this.getCache(cacheKey);
-    if (cached) return cached;
+    if (cached) return cached as { id: string; name: string; email: string; displayName: string };
 
     try {
       // If it's a UUID, get by ID
@@ -121,7 +121,7 @@ export class LinearEntityResolver {
   static async resolveProject(projectIdOrName: string): Promise<{ id: string; name: string; key?: string } | null> {
     const cacheKey = `project:${projectIdOrName}`;
     const cached = this.getCache(cacheKey);
-    if (cached) return cached;
+    if (cached) return cached as { id: string; name: string; key?: string };
 
     try {
       // If it's a UUID, get by ID
@@ -155,7 +155,7 @@ export class LinearEntityResolver {
   static async resolveState(stateIdOrName: string, teamId?: string): Promise<{ id: string; name: string; type: string; color: string } | null> {
     const cacheKey = `state:${stateIdOrName}:${teamId || 'global'}`;
     const cached = this.getCache(cacheKey);
-    if (cached) return cached;
+    if (cached) return cached as { id: string; name: string; type: string; color: string };
 
     try {
       // If it's a UUID, get by ID
