@@ -19,10 +19,11 @@ export async function POST(request: NextRequest) {
 
     // Check if team was found
     if (!team) {
+      const errorMessage = await LinearEntityResolver.createResolutionError('team', validatedData.teamId);
       return NextResponse.json(
         { 
           success: false, 
-          error: `Team '${validatedData.teamId}' not found` 
+          error: errorMessage
         },
         { status: 400 }
       );
@@ -30,10 +31,11 @@ export async function POST(request: NextRequest) {
 
     // Check if assignee was specified but not found
     if (validatedData.assigneeId && !assignee) {
+      const errorMessage = await LinearEntityResolver.createResolutionError('user', validatedData.assigneeId);
       return NextResponse.json(
         { 
           success: false, 
-          error: `Assignee '${validatedData.assigneeId}' not found` 
+          error: errorMessage
         },
         { status: 400 }
       );
@@ -41,10 +43,11 @@ export async function POST(request: NextRequest) {
 
     // Check if project was specified but not found
     if (validatedData.projectId && !project) {
+      const errorMessage = await LinearEntityResolver.createResolutionError('project', validatedData.projectId);
       return NextResponse.json(
         { 
           success: false, 
-          error: `Project '${validatedData.projectId}' not found` 
+          error: errorMessage
         },
         { status: 400 }
       );
@@ -52,10 +55,11 @@ export async function POST(request: NextRequest) {
 
     // Check if state was specified but not found
     if (validatedData.stateId && !state) {
+      const errorMessage = await LinearEntityResolver.createResolutionError('state', validatedData.stateId);
       return NextResponse.json(
         { 
           success: false, 
-          error: `State '${validatedData.stateId}' not found` 
+          error: errorMessage
         },
         { status: 400 }
       );

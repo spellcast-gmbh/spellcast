@@ -46,7 +46,85 @@ export class LinearEntityResolver {
     return null;
   }
 
-  // Resolve team ID or name to team object
+  // Get all teams with names and keys
+  static async getAllTeams(): Promise<Array<{ id: string; name: string; key: string }>> {
+    const cacheKey = 'all_teams';
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached as Array<{ id: string; name: string; key: string }>;
+
+    try {
+      const teams = await linearClient.teams();
+      const result = teams.nodes.map(t => ({ id: t.id, name: t.name, key: t.key }));
+      this.setCache(cacheKey, result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      return [];
+    }
+  }
+
+  // Get all users with names and emails
+  static async getAllUsers(): Promise<Array<{ id: string; name: string; email: string; displayName: string }>> {
+    const cacheKey = 'all_users';
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached as Array<{ id: string; name: string; email: string; displayName: string }>;
+
+    try {
+      const users = await linearClient.users();
+      const result = users.nodes.map(u => ({ 
+        id: u.id, 
+        name: u.name, 
+        email: u.email, 
+        displayName: u.displayName 
+      }));
+      this.setCache(cacheKey, result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  }
+
+  // Get all projects with names
+  static async getAllProjects(): Promise<Array<{ id: string; name: string }>> {
+    const cacheKey = 'all_projects';
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached as Array<{ id: string; name: string }>;
+
+    try {
+      const projects = await linearClient.projects();
+      const result = projects.nodes.map(p => ({ id: p.id, name: p.name }));
+      this.setCache(cacheKey, result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      return [];
+    }
+  }
+
+  // Get all workflow states with names
+  static async getAllStates(): Promise<Array<{ id: string; name: string; type: string; color: string }>> {
+    const cacheKey = 'all_states';
+    const cached = this.getCache(cacheKey);
+    if (cached) return cached as Array<{ id: string; name: string; type: string; color: string }>;
+
+    try {
+      const states = await linearClient.workflowStates();
+      const result = states.nodes.map(s => ({ 
+        id: s.id, 
+        name: s.name, 
+        type: s.type, 
+        color: s.color 
+      }));
+      this.setCache(cacheKey, result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching states:', error);
+      return [];
+    }
+  }
+
+  // Resolve team ID or name to team object with error information
   static async resolveTeam(teamIdOrName: string): Promise<{ id: string; name: string; key: string } | null> {
     const cacheKey = `team:${teamIdOrName}`;
     const cached = this.getCache(cacheKey);
@@ -81,7 +159,7 @@ export class LinearEntityResolver {
     }
   }
 
-  // Resolve user ID, email, or name to user object
+  // Resolve user ID, email, or name to user object with error information
   static async resolveUser(userIdOrNameOrEmail: string): Promise<{ id: string; name: string; email: string; displayName: string } | null> {
     const cacheKey = `user:${userIdOrNameOrEmail}`;
     const cached = this.getCache(cacheKey);
@@ -117,7 +195,7 @@ export class LinearEntityResolver {
     }
   }
 
-  // Resolve project ID or name to project object
+  // Resolve project ID or name to project object with error information
   static async resolveProject(projectIdOrName: string): Promise<{ id: string; name: string; key?: string } | null> {
     const cacheKey = `project:${projectIdOrName}`;
     const cached = this.getCache(cacheKey);
@@ -151,7 +229,7 @@ export class LinearEntityResolver {
     }
   }
 
-  // Resolve state ID or name to state object (requires team context)
+  // Resolve state ID or name to state object (requires team context) with error information
   static async resolveState(stateIdOrName: string, teamId?: string): Promise<{ id: string; name: string; type: string; color: string } | null> {
     const cacheKey = `state:${stateIdOrName}:${teamId || 'global'}`;
     const cached = this.getCache(cacheKey);
@@ -198,5 +276,53 @@ export class LinearEntityResolver {
     if (!defaultProjectId) return null;
 
     return await this.resolveProject(defaultProjectId);
+  }
+
+  // Helper method to create error messages with available names
+  static async createResolutionError(entityType: 'team' | 'user' | 'project' | 'state', requestedValue: string): Promise<string> {
+    let availableNames: string[] = [];
+    
+    try {
+      switch (entityType) {
+        case 'team':
+          const teams = await this.getAllTeams();
+          availableNames = teams.map(t => `${t.name} (${t.key})`);
+          break;
+        case 'user':
+          const users = await this.getAllUsers();
+          availableNames = users.map(u => `${u.displayName} (${u.email})`);
+          break;
+        case 'project':
+          const projects = await this.getAllProjects();
+          availableNames = projects.map(p => p.name);
+          break;
+        case 'state':
+          const states = await this.getAllStates();
+          availableNames = states.map(s => s.name);
+          break;
+      }
+    } catch (error) {
+      console.error(`Error fetching available ${entityType}s:`, error);
+      availableNames = [];
+    }
+
+    const entityTypeCapitalized = entityType.charAt(0).toUpperCase() + entityType.slice(1);
+    let errorMessage = `${entityTypeCapitalized} '${requestedValue}' not found.`;
+    
+    if (availableNames.length > 0) {
+      const maxNames = 10; // Limit to prevent overly long error messages
+      const namesToShow = availableNames.slice(0, maxNames);
+      const remainingCount = availableNames.length - maxNames;
+      
+      errorMessage += ` Available ${entityType}s: ${namesToShow.join(', ')}`;
+      
+      if (remainingCount > 0) {
+        errorMessage += ` and ${remainingCount} more`;
+      }
+    } else {
+      errorMessage += ` Unable to fetch available ${entityType}s.`;
+    }
+    
+    return errorMessage;
   }
 }

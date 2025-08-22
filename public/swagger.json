@@ -12,10 +12,6 @@
     {
       "url": "https://spellcast-ten.vercel.app/api",
       "description": "Production server"
-    },
-    {
-      "url": "/api",
-      "description": "Development server"
     }
   ],
   "paths": {
