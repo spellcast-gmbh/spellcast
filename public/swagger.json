@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Spellcast AgenticTrace API",
+    "title": "Agentic Spellcast API",
     "description": "API for managing AgenticTraces - comprehensive tracking of multi-agent workflows with events, handovers, and tracing capabilities. All endpoints require authentication using a Bearer token in the Authorization header.",
     "version": "2.0.0",
     "contact": {
