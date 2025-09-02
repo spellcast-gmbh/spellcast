@@ -34,7 +34,7 @@ describe('AgenticTrace Zod Schemas', () => {
       input: 'Handover input',
       timestamp: '2024-01-01T12:00:00Z',
       targetAgent: 'executor',
-      metadata: { priority: 'high' },
+      agentHint: 'executor',
     };
 
     it('should validate a valid handover', () => {
@@ -43,9 +43,9 @@ describe('AgenticTrace Zod Schemas', () => {
       expect(parsed).toMatchObject(validHandover);
     });
 
-    it('should validate handover without metadata', () => {
-      const { metadata: _, ...handoverWithoutMetadata } = validHandover;
-      expect(() => HandoverSchema.parse(handoverWithoutMetadata)).not.toThrow();
+    it('should validate handover without agentHint', () => {
+      const { agentHint: _, ...handoverWithoutAgentHint } = validHandover;
+      expect(() => HandoverSchema.parse(handoverWithoutAgentHint)).not.toThrow();
     });
 
     it('should reject handover with invalid UUID', () => {
@@ -79,7 +79,7 @@ describe('AgenticTrace Zod Schemas', () => {
       outcome: { success: true, result: 'Completed' },
       markdown: '## Results\n\nTask completed successfully.',
       handovers: [],
-      metadata: { complexity: 'medium' },
+      agentHint: 'planner',
     };
 
     it('should validate a valid agent event', () => {
@@ -123,7 +123,7 @@ describe('AgenticTrace Zod Schemas', () => {
       duration: 7200000,
       events: [],
       status: 'completed',
-      metadata: { project: 'test' },
+      agentHint: 'coordinator',
     };
 
     it('should validate a valid agentic trace', () => {
@@ -174,7 +174,7 @@ describe('AgenticTrace Zod Schemas', () => {
       input: 'Test input',
       firstAgent: 'planner',
       blocking: true,
-      metadata: { source: 'test' },
+      agentHint: 'planner',
     };
 
     it('should validate a valid create request', () => {

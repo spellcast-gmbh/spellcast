@@ -44,7 +44,7 @@ async function submitPrompt(prompt: string, name: string): Promise<SubmitPromptR
     body: JSON.stringify({
       name,
       prompt,
-      metadata: { testCase: true },
+      agentHint: 'coordinator',
     }),
   });
 

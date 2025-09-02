@@ -1,4 +1,4 @@
-import { AgenticTrace, AgentEvent, Handover, CreateTraceRequest } from '@/models/agenticTraceSchemas';
+import { AgenticTrace, AgentEvent, Handover } from '@/models/agenticTraceSchemas';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -9,7 +9,7 @@ export const mockHandover: Handover = {
   input: 'Handover input data',
   timestamp: '2024-01-01T12:30:00Z',
   targetAgent: 'executor',
-  metadata: { priority: 'high' },
+  agentHint: 'executor',
 };
 
 /**
@@ -28,7 +28,7 @@ export const mockAgentEvent: AgentEvent = {
   },
   markdown: '## Planning Results\n\nSuccessfully analyzed the input and created execution plan.',
   handovers: [mockHandover],
-  metadata: { complexity: 'medium' },
+  agentHint: 'planner',
 };
 
 /**
@@ -43,29 +43,26 @@ export const mockAgenticTrace: AgenticTrace = {
   duration: 9000,
   events: [mockAgentEvent],
   status: 'completed',
-  metadata: { project: 'test-project', version: '1.0' },
+  agentHint: 'coordinator',
 };
 
 /**
  * Mock create trace request
  */
-export const mockCreateTraceRequest: CreateTraceRequest = {
+export const mockCreateTraceRequest = {
   name: 'Test Trace',
-  input: 'Test input for processing',
-  firstAgent: 'planner',
-  blocking: false,
-  metadata: { source: 'test-suite' },
+  prompt: 'Test input for processing',
+  agentHint: 'planner',
 };
 
 /**
  * Mock create trace request (blocking)
  */
-export const mockCreateTraceRequestBlocking: CreateTraceRequest = {
+export const mockCreateTraceRequestBlocking = {
   name: 'Blocking Test Trace',
-  input: 'Test input for blocking processing',
-  firstAgent: 'researcher',
+  prompt: 'Test input for blocking processing',
+  agentHint: 'researcher',
   blocking: true,
-  metadata: { source: 'test-suite', urgent: true },
 };
 
 /**

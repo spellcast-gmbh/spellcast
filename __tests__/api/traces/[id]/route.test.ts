@@ -46,7 +46,7 @@ describe('/api/traces/[id]', () => {
         initialInput: trace.initialInput,
         events: trace.events,
         status: trace.status,
-        metadata: trace.metadata,
+        agentHint: trace.agentHint,
       });
       testTraces.push(createdTrace);
     }
@@ -164,7 +164,7 @@ describe('/api/traces/[id]', () => {
         },
         markdown: '## Task Results\n\nSuccessfully executed the task.',
         handovers: [],
-        metadata: { priority: 'high' },
+        agentHint: 'executor',
       };
 
       const request = createMockRequest(`http://localhost:3000/api/traces/${trace.id}`, {
@@ -193,7 +193,7 @@ describe('/api/traces/[id]', () => {
       const updateData = {
         status: 'completed',
         duration: 5000,
-        metadata: { completed: true },
+        agentHint: 'coordinator',
       };
 
       const request = createMockRequest(`http://localhost:3000/api/traces/${trace.id}`, {

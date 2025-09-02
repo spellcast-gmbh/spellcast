@@ -1,17 +1,18 @@
 import { agenticTraceService } from './firebase';
 import coordinator from '@/agents/coordinator';
+import { run } from '@openai/agents';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ProcessingResult {
   success: boolean;
-  result?: any;
+  result?: unknown;
   error?: string;
   duration: number;
 }
 
 export class AgentProcessor {
   /**
-   * Process a trace with the coordinator agent asynchronously
+   * Process a trace with the coordinator agent
    */
   static async processTrace(traceId: string): Promise<void> {
     const startTime = Date.now();
@@ -31,7 +32,7 @@ export class AgentProcessor {
       console.log(`Starting agent processing for trace ${traceId}:`, trace.initialInput);
 
       // Run the coordinator agent with the input
-      const agentResult = await this.runCoordinator(trace.initialInput);
+      const agentResult = await this.runCoordinator(trace.initialInput + "\n\n If possible, use the agent " + trace.agentHint);
       
       const duration = Date.now() - startTime;
 
@@ -49,10 +50,7 @@ export class AgentProcessor {
         },
         markdown: this.generateEventMarkdown(trace.initialInput, agentResult),
         handovers: [],
-        metadata: {
-          processingTime: duration,
-          agentResponse: agentResult.result
-        }
+        agentHint: 'coordinator' as const
       };
 
       // Update trace with the event and completion status
@@ -82,10 +80,7 @@ export class AgentProcessor {
         },
         markdown: `## Processing Error\n\nAn error occurred while processing the request:\n\n\`\`\`\n${error instanceof Error ? error.message : 'Unknown error'}\n\`\`\``,
         handovers: [],
-        metadata: {
-          processingTime: duration,
-          errorDetails: error
-        }
+        agentHint: 'coordinator' as const
       };
 
       // Update trace with error status
@@ -105,15 +100,13 @@ export class AgentProcessor {
     
     try {
       // Run the coordinator agent
-      const result = await coordinator.run({
-        messages: [{ role: 'user', content: input }]
-      });
+      const result = await run(coordinator, input);
 
       const duration = Date.now() - startTime;
 
       return {
         success: true,
-        result: result.messages[result.messages.length - 1]?.content || 'No response from coordinator',
+        result: result.output || 'No response from coordinator',
         duration
       };
 
@@ -163,6 +156,13 @@ ${result.result}
     this.processTrace(traceId).catch(error => {
       console.error(`Failed to process trace ${traceId}:`, error);
     });
+  }
+
+  /**
+   * Process a trace synchronously and wait for completion
+   */
+  static async processTraceBlocking(traceId: string): Promise<void> {
+    return this.processTrace(traceId);
   }
 
   /**

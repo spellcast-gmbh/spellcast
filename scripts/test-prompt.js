@@ -34,10 +34,7 @@ async function submitPrompt(prompt, name) {
       body: JSON.stringify({
         name,
         prompt,
-        metadata: { 
-          testScript: true, 
-          timestamp: new Date().toISOString() 
-        },
+        agentHint: 'coordinator',
       }),
     });
 

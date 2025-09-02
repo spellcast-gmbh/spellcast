@@ -313,10 +313,9 @@
           "targetAgent": {
             "$ref": "#/components/schemas/AgentType"
           },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Additional handover metadata"
+          "agentHint": {
+            "$ref": "#/components/schemas/AgentType",
+            "description": "Hint about which agent should handle this"
           }
         },
         "required": ["id", "input", "timestamp", "targetAgent"]
@@ -362,10 +361,9 @@
             },
             "description": "Handovers to other agents"
           },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Additional event metadata"
+          "agentHint": {
+            "$ref": "#/components/schemas/AgentType",
+            "description": "Hint about which agent should handle this event"
           }
         },
         "required": ["id", "input", "agentType", "timestamp", "outcome"]
@@ -412,10 +410,9 @@
           "status": {
             "$ref": "#/components/schemas/TraceStatus"
           },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Additional trace metadata"
+          "agentHint": {
+            "$ref": "#/components/schemas/AgentType",
+            "description": "Hint about which agent should handle this trace"
           }
         },
         "required": ["id", "name", "initialInput", "createdAt", "updatedAt", "events", "status"]
@@ -434,10 +431,14 @@
             "minLength": 1,
             "description": "The prompt to process"
           },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Additional trace metadata"
+          "agentHint": {
+            "$ref": "#/components/schemas/AgentType",
+            "description": "Hint about which agent should handle this request"
+          },
+          "blocking": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to wait for processing completion before returning"
           }
         },
         "required": ["name", "prompt"]

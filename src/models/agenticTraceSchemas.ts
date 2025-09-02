@@ -24,7 +24,7 @@ export const HandoverSchema = z.object({
   input: z.string().min(1),
   timestamp: DateTimeSchema,
   targetAgent: AgentTypeSchema,
-  metadata: z.record(z.unknown()).optional(),
+  agentHint: AgentTypeSchema.optional(),
 });
 
 // Agent Event schema
@@ -37,7 +37,7 @@ export const AgentEventSchema = z.object({
   outcome: z.record(z.unknown()),
   markdown: z.string().optional(),
   handovers: z.array(HandoverSchema).default([]),
-  metadata: z.record(z.unknown()).optional(),
+  agentHint: AgentTypeSchema.optional(),
 });
 
 // Agentic Trace schema
@@ -50,7 +50,7 @@ export const AgenticTraceSchema = z.object({
   duration: z.number().min(0).optional(), // milliseconds
   events: z.array(AgentEventSchema).default([]),
   status: z.enum(['pending', 'running', 'completed', 'failed']).default('pending'),
-  metadata: z.record(z.unknown()).optional(),
+  agentHint: AgentTypeSchema.optional(),
 });
 
 // API Request schemas
@@ -60,8 +60,8 @@ export const CreateTraceRequestSchema = z.object({
   name: z.string().min(1).max(255),
   input: z.string().min(1),
   firstAgent: AgentTypeSchema.optional(),
-  blocking: z.boolean().default(false),
-  metadata: z.record(z.unknown()).optional(),
+  blocking: z.boolean().default(true),
+  agentHint: AgentTypeSchema.optional(),
 });
 
 // Update trace request (for adding events)

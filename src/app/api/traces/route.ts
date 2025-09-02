@@ -3,7 +3,8 @@ import { validateApiKey } from '@/lib/auth';
 import { agenticTraceService } from '@/lib/firebase';
 import { AgentProcessor } from '@/lib/agentProcessor';
 import { 
-  ListTracesRequestSchema
+  ListTracesRequestSchema,
+  AgentTypeSchema
 } from '@/models/agenticTraceSchemas';
 import { z } from 'zod';
 
@@ -11,7 +12,8 @@ import { z } from 'zod';
 const SubmitPromptSchema = z.object({
   name: z.string().min(1).max(255),
   prompt: z.string().min(1),
-  metadata: z.record(z.unknown()).optional(),
+  agentHint: AgentTypeSchema.optional(),
+  blocking: z.boolean().default(false),
 });
 
 /**
@@ -32,28 +34,41 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validatedData = SubmitPromptSchema.parse(body);
 
-    // Create the trace in pending status - agent processing will happen asynchronously
+    // Create the trace in pending status
     const trace = await agenticTraceService.createTrace({
       name: validatedData.name,
       initialInput: validatedData.prompt,
       events: [],
       status: 'pending',
-      metadata: validatedData.metadata || {},
+      agentHint: validatedData.agentHint,
     });
 
-    // Start agent processing asynchronously (fire and forget)
-    AgentProcessor.startProcessing(trace.id);
+    if (validatedData.blocking) {
+      // Process synchronously and wait for completion
+      await AgentProcessor.processTraceBlocking(trace.id);
+      
+      // Get the updated trace with processing results
+      const completedTrace = await agenticTraceService.getTrace(trace.id);
+      
+      return NextResponse.json({
+        success: true,
+        data: completedTrace
+      }, { status: 201 });
+    } else {
+      // Start agent processing asynchronously (fire and forget)
+      AgentProcessor.startProcessing(trace.id);
 
-    // Return the trace ID immediately
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: trace.id,
-        name: trace.name,
-        status: trace.status,
-        createdAt: trace.createdAt
-      }
-    }, { status: 201 });
+      // Return the trace ID immediately
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: trace.id,
+          name: trace.name,
+          status: trace.status,
+          createdAt: trace.createdAt
+        }
+      }, { status: 201 });
+    }
 
   } catch (error) {
     console.error('Error submitting prompt:', error);
