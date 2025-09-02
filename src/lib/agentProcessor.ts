@@ -49,7 +49,7 @@ export class AgentProcessor {
           type: agentResult.success ? 'completion' : 'error'
         },
         markdown: this.generateEventMarkdown(trace.initialInput, agentResult),
-        handovers: [],
+        handoffs: [],
         agentHint: 'coordinator' as const
       };
 
@@ -79,7 +79,7 @@ export class AgentProcessor {
           type: 'error'
         },
         markdown: `## Processing Error\n\nAn error occurred while processing the request:\n\n\`\`\`\n${error instanceof Error ? error.message : 'Unknown error'}\n\`\`\``,
-        handovers: [],
+        handoffs: [],
         agentHint: 'coordinator' as const
       };
 

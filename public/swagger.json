@@ -285,7 +285,7 @@
     "schemas": {
       "AgentType": {
         "type": "string",
-        "enum": ["planner", "executor", "reviewer", "researcher", "writer", "analyst", "coordinator"],
+        "enum": ["coordinator", "linear"],
         "description": "The type of agent performing the operation"
       },
       "TraceStatus": {
@@ -293,7 +293,7 @@
         "enum": ["pending", "running", "completed", "failed"],
         "description": "The current status of the trace"
       },
-      "Handover": {
+      "Handoff": {
         "type": "object",
         "properties": {
           "id": {
@@ -354,12 +354,12 @@
             "type": "string",
             "description": "Markdown description of the event"
           },
-          "handovers": {
+          "handoffs": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Handover"
+              "$ref": "#/components/schemas/Handoff"
             },
-            "description": "Handovers to other agents"
+            "description": "Handoffs to other agents"
           },
           "agentHint": {
             "$ref": "#/components/schemas/AgentType",

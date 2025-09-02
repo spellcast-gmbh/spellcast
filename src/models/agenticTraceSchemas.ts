@@ -1,15 +1,9 @@
 import { z } from 'zod';
 
-// Agent types enum
+// Agent types enum - only include actually implemented agents
 export const AgentTypeSchema = z.enum([
   'coordinator',
-  'planner', 
-  'executor',
-  'reviewer',
-  'researcher',
-  'writer',
-  'analyst',
-  'tickets',
+  'linear',
 ]);
 
 // UUID validation
@@ -19,7 +13,7 @@ const UuidSchema = z.string().uuid();
 const DateTimeSchema = z.string().datetime();
 
 // Define base schemas first to avoid circular references
-export const HandoverSchema = z.object({
+export const HandoffSchema = z.object({
   id: UuidSchema,
   input: z.string().min(1),
   timestamp: DateTimeSchema,
@@ -36,7 +30,7 @@ export const AgentEventSchema = z.object({
   duration: z.number().min(0).optional(),
   outcome: z.record(z.unknown()),
   markdown: z.string().optional(),
-  handovers: z.array(HandoverSchema).default([]),
+  handoffs: z.array(HandoffSchema).default([]),
   agentHint: AgentTypeSchema.optional(),
 });
 
@@ -125,7 +119,7 @@ export const ErrorResponseSchema = z.object({
 
 // Type exports using zod infer
 export type AgentType = z.infer<typeof AgentTypeSchema>;
-export type Handover = z.infer<typeof HandoverSchema>;
+export type Handoff = z.infer<typeof HandoffSchema>;
 export type AgentEvent = z.infer<typeof AgentEventSchema>;
 export type AgenticTrace = z.infer<typeof AgenticTraceSchema>;
 
