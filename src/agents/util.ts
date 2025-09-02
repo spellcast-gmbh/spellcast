@@ -1,6 +1,5 @@
 import { AgenticTrace } from "@/models/agenticTraceSchemas";
 import { Agent, Handoff, Tool } from '@openai/agents';
-import { z } from "zod";
 
 export type AgentTracing = (t:AgenticTrace) => Agent;
 export type ToolTracing = (t:AgenticTrace) => Tool;

@@ -122,6 +122,8 @@ export class AgenticTraceFirebaseService {
       id: eventId,
     };
 
+    console.log('New event:', fullEvent);
+
     // Add event to the trace's events array
     const traceRef = this.db.collection(COLLECTIONS.TRACES).doc(traceId);
     await traceRef.update({

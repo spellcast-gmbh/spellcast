@@ -1,8 +1,8 @@
-import { Agent, tool } from '@openai/agents';
+import { Agent, handoff, tool } from '@openai/agents';
 import { LinearClient } from '@linear/sdk';
 import { env } from '../lib/env';
 import { z } from 'zod';
-import { AgentTracing, ToolTracing } from './util';
+import { AgentTracing, HandoffTracing, ToolTracing } from './util';
 import { RECOMMENDED_PROMPT_PREFIX } from '@openai/agents-core/extensions';
 import { agenticTraceService } from '@/lib/firebase';
 
@@ -67,6 +67,12 @@ class LinearAgentService {
       if (team) {
         const result = { id: team.id, name: team.name, key: team.key };
         this.setCache(cacheKey, result);
+        return result;
+      }
+
+      //if no team found, return the first team
+      if (teams && teams.nodes.length > 0) {
+        const result = { id: teams.nodes[0].id, name: teams.nodes[0].name, key: teams.nodes[0].key };
         return result;
       }
 
@@ -203,17 +209,8 @@ const createIssueTool: ToolTracing = (t) => tool({
         stateId ? linearService.resolveState(stateId) : null,
       ]);
 
-      if (!team) {
-        throw new Error(`Team '${teamId}' not found`);
-      }
-      if (assigneeId && !assignee) {
-        throw new Error(`User '${assigneeId}' not found`);
-      }
-      if (projectId && !project) {
-        throw new Error(`Project '${projectId}' not found`);
-      }
-      if (stateId && !state) {
-        throw new Error(`State '${stateId}' not found`);
+      if (!team?.id) {
+        throw new Error(`Could not resolve team: ${teamId}`);
       }
 
       const issuePayload = await linearService.client.createIssue({
@@ -281,7 +278,9 @@ const createIssueTool: ToolTracing = (t) => tool({
         markdown: `Failed to create issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
         agent: 'linear',
       });
-      throw new Error(`Failed to create issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return {
+        error: `Failed to create issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
     }
   }
 });
@@ -413,7 +412,9 @@ const searchIssuesTool: ToolTracing = (t) => tool({
         timestamp: new Date().toISOString(),
         markdown: `Failed to search issues: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
-      throw new Error(`Failed to search issues: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return {
+        error: `Failed to search issues: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
     }
   }
 });
@@ -492,7 +493,9 @@ const getIssueTool: ToolTracing = (t) => tool({
         timestamp: new Date().toISOString(),
         markdown: `Failed to get issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
-      throw new Error(`Failed to get issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return {
+        error: `Failed to get issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
     }
   }
 });
@@ -599,7 +602,9 @@ const updateIssueTool: ToolTracing = (t) => tool({
         timestamp: new Date().toISOString(),
         markdown: `Failed to update issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
-      throw new Error(`Failed to update issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return {
+        error: `Failed to update issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
     }
   }
 });
@@ -623,6 +628,27 @@ export const linearAgent: AgentTracing = (t) => new Agent({
     getIssueTool(t),
     updateIssueTool(t)
   ]
+});
+
+const LinearHandoffInput = z.object({
+  task: z.string().describe('A detailed description of the task to be completed.'),
+});
+type LinearHandoffInput = z.infer<typeof LinearHandoffInput>;
+
+export const linearHandoff: HandoffTracing = (t) => handoff(linearAgent(t), {
+  inputType: LinearHandoffInput,
+  onHandoff: async (_ctx, input) => {
+    await agenticTraceService.addEventToTrace(t.id, {
+      type: 'handoff',
+      input: {
+        data: input,
+      },
+      agent: 'coordinator',
+      output: {},
+      timestamp: new Date().toISOString(),
+      markdown: `Handed off to Linear agent.`
+    });
+  }
 });
 
 export default linearAgent;

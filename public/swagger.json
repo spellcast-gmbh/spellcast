@@ -102,8 +102,7 @@
             "description": "Cursor for pagination (trace ID)",
             "required": false,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           {
@@ -214,8 +213,7 @@
             "description": "The ID of the trace to retrieve",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           {
@@ -298,7 +296,6 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "description": "Unique identifier for the event"
           },
           "type": {
@@ -336,7 +333,6 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid",
             "description": "Unique identifier for the trace"
           },
           "name": {
@@ -418,7 +414,6 @@
             "properties": {
               "id": {
                 "type": "string",
-                "format": "uuid",
                 "description": "The unique identifier for the created trace"
               },
               "name": {

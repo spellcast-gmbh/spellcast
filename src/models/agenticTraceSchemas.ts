@@ -6,15 +6,15 @@ export const AgentTypeSchema = z.enum([
   'linear',
 ]);
 
-// UUID validation
-const UuidSchema = z.string().uuid();
+// ID validation - accepts any string (not just UUIDs)
+const IdSchema = z.string().min(1);
 
 // ISO datetime validation  
 const DateTimeSchema = z.string().datetime();
 
 // Agent Event schema - simplified structure
 export const AgentEventSchema = z.object({
-  id: UuidSchema,
+  id: IdSchema,
   type: z.enum(['tool', 'start', 'handoff']),
   agent: AgentTypeSchema,
   input: z.record(z.unknown()),
@@ -25,7 +25,7 @@ export const AgentEventSchema = z.object({
 
 // Agentic Trace schema
 export const AgenticTraceSchema = z.object({
-  id: UuidSchema,
+  id: IdSchema,
   name: z.string().min(1).max(255),
   initialInput: z.string().min(1),
   createdAt: DateTimeSchema,
@@ -49,7 +49,7 @@ export const CreateTraceRequestSchema = z.object({
 
 // Update trace request (for adding events)
 export const AddEventRequestSchema = z.object({
-  traceId: UuidSchema,
+  traceId: IdSchema,
   event: AgentEventSchema.omit({ id: true }),
 });
 
@@ -73,7 +73,7 @@ export const ListTracesRequestSchema = PaginationRequestSchema.extend({
 
 // Get trace request
 export const GetTraceRequestSchema = z.object({
-  id: UuidSchema,
+  id: IdSchema,
   fields: z.string().optional(), // comma-separated list of fields to include
 });
 
