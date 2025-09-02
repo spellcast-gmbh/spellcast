@@ -61,6 +61,7 @@ export const env = {
   // Firebase Configuration
   FIREBASE_SERVICE_ACCOUNT: getEnvVar('FIREBASE_SERVICE_ACCOUNT'),
   FIREBASE_DATABASE_URL: getOptionalEnvVar('FIREBASE_DATABASE_URL'),
+  FIREBASE_PROJECT_ID: getEnvVar('FIREBASE_PROJECT_ID'),
   
   // Server URLs
   BASE_URL: getOptionalEnvVar('BASE_URL', 'http://localhost:3000'),
