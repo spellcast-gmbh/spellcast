@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/auth';
 import { agenticTraceService } from '@/lib/firebase';
+import { AgentProcessor } from '@/lib/agentProcessor';
 import { 
-  CreateTraceRequestSchema, 
   ListTracesRequestSchema
 } from '@/models/agenticTraceSchemas';
-import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
+// Schema for prompt submission
+const SubmitPromptSchema = z.object({
+  name: z.string().min(1).max(255),
+  prompt: z.string().min(1),
+  metadata: z.record(z.unknown()).optional(),
+});
+
 /**
- * POST /api/traces - Create a new agentic trace
+ * POST /api/traces - Submit a prompt to create a new trace
  */
 export async function POST(request: NextRequest) {
   try {
@@ -24,61 +30,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body
-    const validatedData = CreateTraceRequestSchema.parse(body);
+    const validatedData = SubmitPromptSchema.parse(body);
 
-    // Create the trace
+    // Create the trace in pending status - agent processing will happen asynchronously
     const trace = await agenticTraceService.createTrace({
       name: validatedData.name,
-      initialInput: validatedData.input,
+      initialInput: validatedData.prompt,
       events: [],
-      status: validatedData.blocking ? 'pending' : 'running',
-      metadata: validatedData.metadata,
+      status: 'pending',
+      metadata: validatedData.metadata || {},
     });
 
-    // If blocking mode, simulate processing and return completed trace
-    if (validatedData.blocking) {
-      // In a real implementation, you would run the actual agent processing here
-      // For now, we'll create a mock completed trace with a sample event
-      const mockEvent = {
-        id: uuidv4(),
-        input: validatedData.input,
-        agentType: validatedData.firstAgent || 'planner' as const,
-        timestamp: new Date().toISOString(),
-        duration: 1000,
-        outcome: {
-          success: true,
-          result: 'Processing completed',
-          type: 'completion'
-        },
-        markdown: `## Processing Result\n\nProcessed input: "${validatedData.input}"\n\nAgent: ${validatedData.firstAgent || 'planner'}`,
-        handovers: [],
-        metadata: {}
-      };
+    // Start agent processing asynchronously (fire and forget)
+    AgentProcessor.startProcessing(trace.id);
 
-      // Update trace with the completed event and final status
-      await agenticTraceService.updateTrace(trace.id, {
-        events: [mockEvent],
-        status: 'completed',
-        duration: 1000
-      });
-
-      // Return the completed trace
-      const completedTrace = await agenticTraceService.getTrace(trace.id);
-      
-      return NextResponse.json({
-        success: true,
-        data: completedTrace
-      }, { status: 201 });
-    }
-
-    // For non-blocking mode, return the initial trace
+    // Return the trace ID immediately
     return NextResponse.json({
       success: true,
-      data: trace
+      data: {
+        id: trace.id,
+        name: trace.name,
+        status: trace.status,
+        createdAt: trace.createdAt
+      }
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error creating trace:', error);
+    console.error('Error submitting prompt:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -110,6 +88,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 
 /**
  * GET /api/traces - List traces with pagination

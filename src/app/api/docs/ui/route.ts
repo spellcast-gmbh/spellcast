@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         plugins: [
           SwaggerUIBundle.plugins.DownloadUrl
         ],
+        viewOperationIdentifier: true,
         layout: "StandaloneLayout",
         validatorUrl: null,
         tryItOutEnabled: true,

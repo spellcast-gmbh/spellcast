@@ -80,6 +80,8 @@ export const env = {
   MAX_EVENTS_PER_TRACE: getNumberEnvVar('MAX_EVENTS_PER_TRACE', 1000),
   DEFAULT_PAGE_SIZE: getNumberEnvVar('DEFAULT_PAGE_SIZE', 50),
   MAX_PAGE_SIZE: getNumberEnvVar('MAX_PAGE_SIZE', 100),
+
+  OPENAI_API_KEY: getEnvVar('OPENAI_API_KEY'),
 } as const;
 
 // Type for environment configuration

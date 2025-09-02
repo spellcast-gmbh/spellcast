@@ -22,9 +22,9 @@
     "/traces": {
       "post": {
         "x-openai-isConsequential": false,
-        "operationId": "createTrace",
-        "summary": "Create a new agentic trace",
-        "description": "Create a new agentic trace for tracking multi-agent workflows. Supports both blocking and non-blocking modes.",
+        "operationId": "submitPrompt",
+        "summary": "Submit a prompt for processing",
+        "description": "Submit a prompt with a name to create a new trace. Returns immediately with trace ID while processing happens asynchronously.",
         "tags": ["AgenticTrace"],
         "security": [
           {
@@ -36,18 +36,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTraceRequest"
+                "$ref": "#/components/schemas/SubmitPromptRequest"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Successfully created trace",
+            "description": "Successfully submitted prompt",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TraceResponse"
+                  "$ref": "#/components/schemas/SubmitPromptResponse"
                 }
               }
             }
@@ -271,173 +271,6 @@
             }
           }
         }
-      },
-      "put": {
-        "x-openai-isConsequential": false,
-        "operationId": "updateTrace",
-        "summary": "Update an agentic trace",
-        "description": "Update an existing agentic trace with new events or status changes.",
-        "tags": ["AgenticTrace"],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The ID of the trace to update",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTraceRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated trace",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TraceResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request body or validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid or missing API key",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Trace not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "x-openai-isConsequential": false,
-        "operationId": "deleteTrace",
-        "summary": "Delete an agentic trace",
-        "description": "Delete a specific agentic trace and all associated data.",
-        "tags": ["AgenticTrace"],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The ID of the trace to delete",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully deleted trace",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "message": {
-                          "type": "string",
-                          "example": "Trace deleted successfully"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid or missing API key",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Trace not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
       }
     }
   },
@@ -587,7 +420,7 @@
         },
         "required": ["id", "name", "initialInput", "createdAt", "updatedAt", "events", "status"]
       },
-      "CreateTraceRequest": {
+      "SubmitPromptRequest": {
         "type": "object",
         "properties": {
           "name": {
@@ -596,19 +429,10 @@
             "maxLength": 255,
             "description": "Human-readable name for the trace"
           },
-          "input": {
+          "prompt": {
             "type": "string",
             "minLength": 1,
-            "description": "Initial input to process"
-          },
-          "firstAgent": {
-            "$ref": "#/components/schemas/AgentType",
-            "description": "The first agent to use (optional)"
-          },
-          "blocking": {
-            "type": "boolean",
-            "default": false,
-            "description": "Whether to process synchronously (blocking) or asynchronously"
+            "description": "The prompt to process"
           },
           "metadata": {
             "type": "object",
@@ -616,34 +440,40 @@
             "description": "Additional trace metadata"
           }
         },
-        "required": ["name", "input"]
+        "required": ["name", "prompt"]
       },
-      "UpdateTraceRequest": {
+      "SubmitPromptResponse": {
         "type": "object",
         "properties": {
-          "event": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AgentEvent"
-              }
-            ],
-            "description": "Add a new event to the trace"
+          "success": {
+            "type": "boolean",
+            "example": true
           },
-          "status": {
-            "$ref": "#/components/schemas/TraceStatus",
-            "description": "Update trace status"
-          },
-          "metadata": {
+          "data": {
             "type": "object",
-            "additionalProperties": true,
-            "description": "Update trace metadata"
-          },
-          "duration": {
-            "type": "number",
-            "minimum": 0,
-            "description": "Update total duration in milliseconds"
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the created trace"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the trace"
+              },
+              "status": {
+                "$ref": "#/components/schemas/TraceStatus"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the trace was created"
+              }
+            },
+            "required": ["id", "name", "status", "createdAt"]
           }
-        }
+        },
+        "required": ["success", "data"]
       },
       "TraceResponse": {
         "type": "object",

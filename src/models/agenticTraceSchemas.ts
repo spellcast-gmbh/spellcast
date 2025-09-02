@@ -2,13 +2,14 @@ import { z } from 'zod';
 
 // Agent types enum
 export const AgentTypeSchema = z.enum([
-  'planner',
+  'coordinator',
+  'planner', 
   'executor',
   'reviewer',
   'researcher',
   'writer',
   'analyst',
-  'coordinator'
+  'tickets',
 ]);
 
 // UUID validation
