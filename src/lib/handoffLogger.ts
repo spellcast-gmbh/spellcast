@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { AgentEvent, Handoff, AgentType } from '../models/agenticTraceSchemas';
+import { AgentEvent, AgentType } from '../models/agenticTraceSchemas';
 
 interface HandoffLogData {
   traceId: string;
@@ -13,35 +13,28 @@ interface HandoffLogData {
 export class HandoffLogger {
   /**
    * Creates an AgentEvent for a handoff operation
-   * This event represents the handoff action itself and includes the handoff details
+   * This event represents the handoff action itself
    */
   static createHandoffEvent(data: HandoffLogData): AgentEvent {
-    const handoffId = uuidv4();
     const now = new Date().toISOString();
-    
-    const handoff: Handoff = {
-      id: handoffId,
-      input: data.input,
-      timestamp: now,
-      targetAgent: data.toAgent,
-      agentHint: data.toAgent
-    };
 
     const event: AgentEvent = {
       id: uuidv4(),
-      input: data.input,
-      agentType: data.fromAgent,
-      timestamp: now,
-      outcome: {
+      type: 'handoff',
+      agent: data.fromAgent,
+      input: {
+        task: data.task || data.input,
+        context: data.context,
+        targetAgent: data.toAgent
+      },
+      output: {
         handoffExecuted: true,
         targetAgent: data.toAgent,
-        handoffId: handoffId,
         task: data.task,
         context: data.context
       },
       markdown: this.generateHandoffMarkdown(data),
-      handoffs: [handoff],
-      agentHint: data.toAgent
+      timestamp: now
     };
 
     return event;
@@ -78,10 +71,14 @@ The ${data.fromAgent} agent is transferring control to the ${data.toAgent} agent
 
     const event: AgentEvent = {
       id: uuidv4(),
-      input: data.input,
-      agentType: data.agent,
-      timestamp: now,
-      outcome: {
+      type: 'start',
+      agent: data.agent,
+      input: {
+        receivedFrom: data.fromAgent,
+        handoffId: data.handoffId,
+        task: data.input
+      },
+      output: {
         handoffReceived: true,
         fromAgent: data.fromAgent,
         handoffId: data.handoffId,
@@ -93,7 +90,7 @@ The ${data.fromAgent} agent is transferring control to the ${data.toAgent} agent
 **Processing:** ${data.input}
 
 The ${data.agent} agent has received the handoff and is now processing the request.`,
-      handoffs: []
+      timestamp: now
     };
 
     return event;
@@ -108,7 +105,7 @@ The ${data.agent} agent has received the handoff and is now processing the reque
     receivedEvent: AgentEvent;
   } {
     const handoffEvent = this.createHandoffEvent(data);
-    const handoffId = handoffEvent.handoffs[0].id;
+    const handoffId = handoffEvent.id;
     
     const receivedEvent = this.createHandoffReceivedEvent({
       traceId: data.traceId,

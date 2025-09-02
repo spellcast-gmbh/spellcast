@@ -293,33 +293,6 @@
         "enum": ["pending", "running", "completed", "failed"],
         "description": "The current status of the trace"
       },
-      "Handoff": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Unique identifier for the handover"
-          },
-          "input": {
-            "type": "string",
-            "description": "Input data for the target agent"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When the handover occurred"
-          },
-          "targetAgent": {
-            "$ref": "#/components/schemas/AgentType"
-          },
-          "agentHint": {
-            "$ref": "#/components/schemas/AgentType",
-            "description": "Hint about which agent should handle this"
-          }
-        },
-        "required": ["id", "input", "timestamp", "targetAgent"]
-      },
       "AgentEvent": {
         "type": "object",
         "properties": {
@@ -328,45 +301,35 @@
             "format": "uuid",
             "description": "Unique identifier for the event"
           },
-          "input": {
+          "type": {
             "type": "string",
-            "description": "Input data for the agent"
+            "enum": ["tool", "start", "handoff"],
+            "description": "Type of the event"
           },
-          "agentType": {
+          "agent": {
             "$ref": "#/components/schemas/AgentType"
           },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When the event occurred"
-          },
-          "duration": {
-            "type": "number",
-            "minimum": 0,
-            "description": "Duration in milliseconds"
-          },
-          "outcome": {
+          "input": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Event outcome data"
+            "description": "Input data for the event"
+          },
+          "output": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Output data from the event"
           },
           "markdown": {
             "type": "string",
             "description": "Markdown description of the event"
           },
-          "handoffs": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Handoff"
-            },
-            "description": "Handoffs to other agents"
-          },
-          "agentHint": {
-            "$ref": "#/components/schemas/AgentType",
-            "description": "Hint about which agent should handle this event"
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the event occurred"
           }
         },
-        "required": ["id", "input", "agentType", "timestamp", "outcome"]
+        "required": ["id", "type", "agent", "input", "output", "timestamp"]
       },
       "AgenticTrace": {
         "type": "object",

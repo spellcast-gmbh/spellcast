@@ -1,6 +1,5 @@
 import { 
   AgentTypeSchema,
-  HandoverSchema,
   AgentEventSchema,
   AgenticTraceSchema,
   CreateTraceRequestSchema,
@@ -12,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 describe('AgenticTrace Zod Schemas', () => {
   describe('AgentTypeSchema', () => {
     it('should validate valid agent types', () => {
-      const validTypes = ['planner', 'executor', 'reviewer', 'researcher', 'writer', 'analyst', 'coordinator'];
+      const validTypes = ['coordinator', 'linear'];
       
       validTypes.forEach(type => {
         expect(() => AgentTypeSchema.parse(type)).not.toThrow();
@@ -28,58 +27,15 @@ describe('AgenticTrace Zod Schemas', () => {
     });
   });
 
-  describe('HandoverSchema', () => {
-    const validHandover = {
-      id: uuidv4(),
-      input: 'Handover input',
-      timestamp: '2024-01-01T12:00:00Z',
-      targetAgent: 'executor',
-      agentHint: 'executor',
-    };
-
-    it('should validate a valid handover', () => {
-      expect(() => HandoverSchema.parse(validHandover)).not.toThrow();
-      const parsed = HandoverSchema.parse(validHandover);
-      expect(parsed).toMatchObject(validHandover);
-    });
-
-    it('should validate handover without agentHint', () => {
-      const { agentHint: _, ...handoverWithoutAgentHint } = validHandover;
-      expect(() => HandoverSchema.parse(handoverWithoutAgentHint)).not.toThrow();
-    });
-
-    it('should reject handover with invalid UUID', () => {
-      const invalidHandover = { ...validHandover, id: 'not-a-uuid' };
-      expect(() => HandoverSchema.parse(invalidHandover)).toThrow();
-    });
-
-    it('should reject handover with empty input', () => {
-      const invalidHandover = { ...validHandover, input: '' };
-      expect(() => HandoverSchema.parse(invalidHandover)).toThrow();
-    });
-
-    it('should reject handover with invalid timestamp', () => {
-      const invalidHandover = { ...validHandover, timestamp: 'not-a-datetime' };
-      expect(() => HandoverSchema.parse(invalidHandover)).toThrow();
-    });
-
-    it('should reject handover with invalid agent type', () => {
-      const invalidHandover = { ...validHandover, targetAgent: 'invalid' };
-      expect(() => HandoverSchema.parse(invalidHandover)).toThrow();
-    });
-  });
-
   describe('AgentEventSchema', () => {
     const validEvent = {
       id: uuidv4(),
-      input: 'Event input',
-      agentType: 'planner',
-      timestamp: '2024-01-01T12:00:00Z',
-      duration: 1500,
-      outcome: { success: true, result: 'Completed' },
+      type: 'tool',
+      agent: 'coordinator',
+      input: { task: 'Event input', context: 'Test context' },
+      output: { success: true, result: 'Completed' },
       markdown: '## Results\n\nTask completed successfully.',
-      handovers: [],
-      agentHint: 'planner',
+      timestamp: '2024-01-01T12:00:00Z',
     };
 
     it('should validate a valid agent event', () => {
@@ -91,25 +47,32 @@ describe('AgenticTrace Zod Schemas', () => {
     it('should validate event with minimal required fields', () => {
       const minimalEvent = {
         id: uuidv4(),
-        input: 'Event input',
-        agentType: 'executor',
+        type: 'start',
+        agent: 'linear',
+        input: { task: 'Event input' },
+        output: { success: true },
         timestamp: '2024-01-01T12:00:00Z',
-        outcome: { success: true },
       };
       
       expect(() => AgentEventSchema.parse(minimalEvent)).not.toThrow();
       const parsed = AgentEventSchema.parse(minimalEvent);
-      expect(parsed.handovers).toEqual([]); // Default value
+      expect(parsed.type).toBe('start');
+      expect(parsed.agent).toBe('linear');
     });
 
-    it('should reject event with negative duration', () => {
-      const invalidEvent = { ...validEvent, duration: -100 };
+    it('should reject event with invalid type', () => {
+      const invalidEvent = { ...validEvent, type: 'invalid' };
+      expect(() => AgentEventSchema.parse(invalidEvent)).toThrow();
+    });
+
+    it('should reject event with invalid agent', () => {
+      const invalidEvent = { ...validEvent, agent: 'invalid' };
       expect(() => AgentEventSchema.parse(invalidEvent)).toThrow();
     });
 
     it('should reject event with missing required fields', () => {
-      const { outcome: _, ...eventWithoutOutcome } = validEvent;
-      expect(() => AgentEventSchema.parse(eventWithoutOutcome)).toThrow();
+      const { output: _, ...eventWithoutOutput } = validEvent;
+      expect(() => AgentEventSchema.parse(eventWithoutOutput)).toThrow();
     });
   });
 

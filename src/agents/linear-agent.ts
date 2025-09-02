@@ -2,14 +2,15 @@ import { Agent, tool } from '@openai/agents';
 import { LinearClient } from '@linear/sdk';
 import { env } from '../lib/env';
 import { z } from 'zod';
+import { AgentTracing, ToolTracing } from './util';
+import { RECOMMENDED_PROMPT_PREFIX } from '@openai/agents-core/extensions';
+import { agenticTraceService } from '@/lib/firebase';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isUUID(str: string): boolean {
   return UUID_PATTERN.test(str);
 }
-
-
 
 class LinearAgentService {
   public client: LinearClient;
@@ -58,17 +59,17 @@ class LinearAgentService {
       }
 
       const teams = await this.client.teams();
-      const team = teams.nodes.find(t => 
-        t.name.toLowerCase() === teamIdOrName.toLowerCase() || 
+      const team = teams.nodes.find(t =>
+        t.name.toLowerCase() === teamIdOrName.toLowerCase() ||
         t.key.toLowerCase() === teamIdOrName.toLowerCase()
       );
-      
+
       if (team) {
         const result = { id: team.id, name: team.name, key: team.key };
         this.setCache(cacheKey, result);
         return result;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error resolving team:', error);
@@ -90,18 +91,18 @@ class LinearAgentService {
       }
 
       const users = await this.client.users();
-      const user = users.nodes.find(u => 
+      const user = users.nodes.find(u =>
         u.name.toLowerCase() === userIdOrNameOrEmail.toLowerCase() ||
         u.displayName.toLowerCase() === userIdOrNameOrEmail.toLowerCase() ||
         u.email.toLowerCase() === userIdOrNameOrEmail.toLowerCase()
       );
-      
+
       if (user) {
         const result = { id: user.id, name: user.name, email: user.email, displayName: user.displayName };
         this.setCache(cacheKey, result);
         return result;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error resolving user:', error);
@@ -123,16 +124,16 @@ class LinearAgentService {
       }
 
       const projects = await this.client.projects();
-      const project = projects.nodes.find(p => 
+      const project = projects.nodes.find(p =>
         p.name.toLowerCase() === projectIdOrName.toLowerCase()
       );
-      
+
       if (project) {
         const result = { id: project.id, name: project.name };
         this.setCache(cacheKey, result);
         return result;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error resolving project:', error);
@@ -161,16 +162,16 @@ class LinearAgentService {
         states = await this.client.workflowStates();
       }
 
-      const state = states.nodes.find(s => 
+      const state = states.nodes.find(s =>
         s.name.toLowerCase() === stateIdOrName.toLowerCase()
       );
-      
+
       if (state) {
         const result = { id: state.id, name: state.name, type: state.type, color: state.color };
         this.setCache(cacheKey, result);
         return result;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error resolving state:', error);
@@ -181,7 +182,7 @@ class LinearAgentService {
 
 const linearService = new LinearAgentService();
 
-const createIssueTool = tool({
+const createIssueTool: ToolTracing = (t) => tool({
   name: 'create_issue',
   description: 'Create a new issue in Linear with the specified details',
   parameters: z.object({
@@ -230,7 +231,7 @@ const createIssueTool = tool({
         throw new Error('Failed to create issue');
       }
 
-      return {
+      const result = {
         id: issue.id,
         title: issue.title,
         description: issue.description,
@@ -239,27 +240,53 @@ const createIssueTool = tool({
         priority: issue.priority,
         createdAt: issue.createdAt.toISOString(),
         team: team ? { id: team.id, name: team.name, key: team.key } : null,
-        assignee: assignee ? { 
-          id: assignee.id, 
-          name: assignee.name, 
+        assignee: assignee ? {
+          id: assignee.id,
+          name: assignee.name,
           displayName: assignee.displayName,
-          email: assignee.email 
+          email: assignee.email
         } : null,
         project: project ? { id: project.id, name: project.name } : null,
-        state: state ? { 
-          id: state.id, 
-          name: state.name, 
-          type: state.type, 
-          color: state.color 
+        state: state ? {
+          id: state.id,
+          name: state.name,
+          type: state.type,
+          color: state.color
         } : null,
       };
+
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'create_issue',
+        },
+        agent: 'linear',
+        output: result,
+        timestamp: new Date().toISOString(),
+        markdown: `Created issue [${issue.id}](${issue.url}) with title ${issue.title}.`
+      });
+
+      return result;
     } catch (error) {
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'create_issue',
+          title, description, teamId, assigneeId, priority, projectId, stateId
+        },
+        output: {
+          error
+        },
+        timestamp: new Date().toISOString(),
+        markdown: `Failed to create issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        agent: 'linear',
+      });
       throw new Error(`Failed to create issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 });
 
-const searchIssuesTool = tool({
+const searchIssuesTool: ToolTracing = (t) => tool({
   name: 'search_issues',
   description: 'Search for issues in Linear based on various criteria',
   parameters: z.object({
@@ -273,7 +300,7 @@ const searchIssuesTool = tool({
   async execute({ query, teamId, assigneeId, stateId, projectId, limit = 50 }) {
     try {
       const filter: Record<string, unknown> = {};
-      
+
       const [team, assignee, project, state] = await Promise.all([
         teamId ? linearService.resolveTeam(teamId) : null,
         assigneeId ? linearService.resolveUser(assigneeId) : null,
@@ -334,37 +361,64 @@ const searchIssuesTool = tool({
             createdAt: issue.createdAt.toISOString(),
             updatedAt: issue.updatedAt.toISOString(),
             team: team ? { id: team.id, name: team.name, key: team.key } : null,
-            assignee: assignee ? { 
-              id: assignee.id, 
-              name: assignee.name, 
+            assignee: assignee ? {
+              id: assignee.id,
+              name: assignee.name,
               displayName: assignee.displayName,
-              email: assignee.email 
+              email: assignee.email
             } : null,
             project: project ? { id: project.id, name: project.name } : null,
-            state: state ? { 
-              id: state.id, 
-              name: state.name, 
-              type: state.type, 
-              color: state.color 
+            state: state ? {
+              id: state.id,
+              name: state.name,
+              type: state.type,
+              color: state.color
             } : null,
             labels: labels.nodes.map(l => ({ id: l.id, name: l.name, color: l.color })),
           };
         })
       );
 
-      return {
+      const result = {
         issues: formattedIssues,
         totalCount: issues.nodes.length,
         hasNextPage: issues.pageInfo.hasNextPage,
         appliedFilters: { team, assignee, project, state, query }
       };
+
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'search_issues',
+          query, teamId, assigneeId, stateId, projectId, limit
+        },
+        agent: 'linear',
+        output: result,
+        timestamp: new Date().toISOString(),
+        markdown: `Found ${formattedIssues.length} issues.`
+      });
+
+      return result;
     } catch (error) {
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'search_issues',
+          query, teamId, assigneeId, stateId, projectId, limit
+        },
+        agent: 'linear',
+        output: {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString(),
+        markdown: `Failed to search issues: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
       throw new Error(`Failed to search issues: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 });
 
-const getIssueTool = tool({
+const getIssueTool: ToolTracing = (t) => tool({
   name: 'get_issue',
   description: 'Get detailed information about a specific issue by ID',
   parameters: z.object({
@@ -385,7 +439,7 @@ const getIssueTool = tool({
         issue.project,
       ]);
 
-      return {
+      const result = {
         id: issue.id,
         title: issue.title,
         description: issue.description,
@@ -395,28 +449,55 @@ const getIssueTool = tool({
         createdAt: issue.createdAt.toISOString(),
         updatedAt: issue.updatedAt.toISOString(),
         team: team ? { id: team.id, name: team.name, key: team.key } : null,
-        assignee: assignee ? { 
-          id: assignee.id, 
-          name: assignee.name, 
+        assignee: assignee ? {
+          id: assignee.id,
+          name: assignee.name,
           displayName: assignee.displayName,
-          email: assignee.email 
+          email: assignee.email
         } : null,
         project: project ? { id: project.id, name: project.name } : null,
-        state: state ? { 
-          id: state.id, 
-          name: state.name, 
-          type: state.type, 
-          color: state.color 
+        state: state ? {
+          id: state.id,
+          name: state.name,
+          type: state.type,
+          color: state.color
         } : null,
         labels: labels.nodes.map(l => ({ id: l.id, name: l.name, color: l.color })),
       };
+
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'get_issue',
+          id
+        },
+        agent: 'linear',
+        output: result,
+        timestamp: new Date().toISOString(),
+        markdown: `Got issue [${issue.id}](${issue.url}) with title ${issue.title}.`
+      });
+
+      return result;
     } catch (error) {
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'get_issue',
+          id
+        },
+        agent: 'linear',
+        output: {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString(),
+        markdown: `Failed to get issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
       throw new Error(`Failed to get issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 });
 
-const updateIssueTool = tool({
+const updateIssueTool: ToolTracing = (t) => tool({
   name: 'update_issue',
   description: 'Update an existing issue with new information',
   parameters: z.object({
@@ -467,7 +548,7 @@ const updateIssueTool = tool({
 
       const team = await updatedIssue.team;
 
-      return {
+      const result = {
         id: updatedIssue.id,
         title: updatedIssue.title,
         description: updatedIssue.description,
@@ -476,29 +557,57 @@ const updateIssueTool = tool({
         priority: updatedIssue.priority,
         updatedAt: updatedIssue.updatedAt.toISOString(),
         team: team ? { id: team.id, name: team.name, key: team.key } : null,
-        assignee: assignee ? { 
-          id: assignee.id, 
-          name: assignee.name, 
+        assignee: assignee ? {
+          id: assignee.id,
+          name: assignee.name,
           displayName: assignee.displayName,
-          email: assignee.email 
+          email: assignee.email
         } : null,
         project: project ? { id: project.id, name: project.name } : null,
-        state: state ? { 
-          id: state.id, 
-          name: state.name, 
-          type: state.type, 
-          color: state.color 
+        state: state ? {
+          id: state.id,
+          name: state.name,
+          type: state.type,
+          color: state.color
         } : null,
       };
+
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'update_issue',
+          id, title, description, assigneeId, priority, projectId, stateId
+        },
+        agent: 'linear',
+        output: result,
+        timestamp: new Date().toISOString(),
+        markdown: `Updated issue [${updatedIssue.id}](${updatedIssue.url}) with title ${updatedIssue.title}.`
+      });
+
+      return result;
     } catch (error) {
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'update_issue',
+          id, title, description, assigneeId, priority, projectId, stateId
+        },
+        agent: 'linear',
+        output: {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString(),
+        markdown: `Failed to update issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
       throw new Error(`Failed to update issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 });
 
-export const linearAgent = new Agent({
+export const linearAgent: AgentTracing = (t) => new Agent({
   name: 'Linear Agent',
-  instructions: `You are a Linear issue management agent. You can create, search, get, and update Linear issues.
+  instructions: `${RECOMMENDED_PROMPT_PREFIX}
+  You are a Linear issue management agent. You can create, search, get, and update Linear issues.
     
     Key capabilities:
     - Create new issues with titles, descriptions, team assignments, etc.
@@ -509,10 +618,10 @@ export const linearAgent = new Agent({
     You can resolve team names, user names/emails, project names, and state names to their IDs automatically.
     Always provide helpful, structured responses about Linear issues.`,
   tools: [
-    createIssueTool,
-    searchIssuesTool,
-    getIssueTool,
-    updateIssueTool
+    createIssueTool(t),
+    searchIssuesTool(t),
+    getIssueTool(t),
+    updateIssueTool(t)
   ]
 });
 

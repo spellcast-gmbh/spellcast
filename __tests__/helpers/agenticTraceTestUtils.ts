@@ -1,34 +1,24 @@
-import { AgenticTrace, AgentEvent, Handover } from '@/models/agenticTraceSchemas';
+import { AgenticTrace, AgentEvent } from '@/models/agenticTraceSchemas';
 import { v4 as uuidv4 } from 'uuid';
-
-/**
- * Mock handover object
- */
-export const mockHandover: Handover = {
-  id: uuidv4(),
-  input: 'Handover input data',
-  timestamp: '2024-01-01T12:30:00Z',
-  targetAgent: 'executor',
-  agentHint: 'executor',
-};
 
 /**
  * Mock agent event object
  */
 export const mockAgentEvent: AgentEvent = {
   id: uuidv4(),
-  input: 'Test agent input',
-  agentType: 'planner',
-  timestamp: '2024-01-01T12:00:00Z',
-  duration: 1500,
-  outcome: {
+  type: 'tool',
+  agent: 'coordinator',
+  input: {
+    task: 'Test agent input',
+    context: 'Test context'
+  },
+  output: {
     success: true,
     result: 'Planning completed successfully',
     type: 'completion'
   },
   markdown: '## Planning Results\n\nSuccessfully analyzed the input and created execution plan.',
-  handovers: [mockHandover],
-  agentHint: 'planner',
+  timestamp: '2024-01-01T12:00:00Z',
 };
 
 /**

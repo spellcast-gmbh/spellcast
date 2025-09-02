@@ -12,26 +12,15 @@ const UuidSchema = z.string().uuid();
 // ISO datetime validation  
 const DateTimeSchema = z.string().datetime();
 
-// Define base schemas first to avoid circular references
-export const HandoffSchema = z.object({
-  id: UuidSchema,
-  input: z.string().min(1),
-  timestamp: DateTimeSchema,
-  targetAgent: AgentTypeSchema,
-  agentHint: AgentTypeSchema.optional(),
-});
-
-// Agent Event schema
+// Agent Event schema - simplified structure
 export const AgentEventSchema = z.object({
   id: UuidSchema,
-  input: z.string().min(1),
-  agentType: AgentTypeSchema,
-  timestamp: DateTimeSchema,
-  duration: z.number().min(0).optional(),
-  outcome: z.record(z.unknown()),
+  type: z.enum(['tool', 'start', 'handoff']),
+  agent: AgentTypeSchema,
+  input: z.record(z.unknown()),
+  output: z.record(z.unknown()),
   markdown: z.string().optional(),
-  handoffs: z.array(HandoffSchema).default([]),
-  agentHint: AgentTypeSchema.optional(),
+  timestamp: DateTimeSchema,
 });
 
 // Agentic Trace schema
@@ -119,7 +108,6 @@ export const ErrorResponseSchema = z.object({
 
 // Type exports using zod infer
 export type AgentType = z.infer<typeof AgentTypeSchema>;
-export type Handoff = z.infer<typeof HandoffSchema>;
 export type AgentEvent = z.infer<typeof AgentEventSchema>;
 export type AgenticTrace = z.infer<typeof AgenticTraceSchema>;
 
