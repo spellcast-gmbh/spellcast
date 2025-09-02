@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import { middleware } from '../src/middleware';
 import { createMockRequest } from './helpers/testUtils';
 
@@ -29,7 +28,7 @@ describe('Middleware', () => {
 
   it('should validate API key for API routes', () => {
     mockValidateApiKey.mockReturnValue(true);
-    const request = createMockRequest('http://localhost:3000/api/linear/list');
+    const request = createMockRequest('http://localhost:3000/api/traces');
 
     const response = middleware(request);
 
@@ -39,7 +38,7 @@ describe('Middleware', () => {
 
   it('should return unauthorized response for invalid API key', () => {
     mockValidateApiKey.mockReturnValue(false);
-    const request = createMockRequest('http://localhost:3000/api/linear/list');
+    const request = createMockRequest('http://localhost:3000/api/traces');
 
     const response = middleware(request);
 
@@ -52,10 +51,8 @@ describe('Middleware', () => {
     mockValidateApiKey.mockReturnValue(true);
     
     const apiRoutes = [
-      '/api/linear/create',
-      '/api/linear/test-id',
-      '/api/linear/search',
-      '/api/linear/list',
+      '/api/traces',
+      '/api/traces/test-id',
     ];
 
     apiRoutes.forEach(route => {

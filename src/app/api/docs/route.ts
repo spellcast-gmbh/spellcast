@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { env } from '@/lib/env';
 
 export async function GET() {
   try {
@@ -8,6 +9,14 @@ export async function GET() {
     const swaggerPath = join(process.cwd(), 'public', 'swagger.json');
     const swaggerContent = await readFile(swaggerPath, 'utf-8');
     const swaggerJson = JSON.parse(swaggerContent);
+
+    // Update servers based on BASE_URL environment variable
+    swaggerJson.servers = [
+      {
+        url: `${env.BASE_URL}/api`,
+        description: env.IS_PRODUCTION ? 'Production server' : 'Development server'
+      }
+    ];
 
     return NextResponse.json(swaggerJson, {
       headers: {

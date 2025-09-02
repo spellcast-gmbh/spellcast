@@ -1,18 +1,15 @@
-import { validateApiKey, createUnauthorizedResponse } from '../../src/lib/auth';
 import { createMockRequest } from '../helpers/testUtils';
 
+// Mock the env module before importing auth
+jest.mock('../../src/lib/env', () => ({
+  env: {
+    API_KEY: 'test-api-key'
+  }
+}));
+
+import { validateApiKey, createUnauthorizedResponse } from '../../src/lib/auth';
+
 describe('Authentication utilities', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...originalEnv };
-    process.env.API_KEY = 'test-api-key';
-  });
-
-  afterAll(() => {
-    process.env = originalEnv;
-  });
 
   describe('validateApiKey', () => {
     it('should return true for valid Bearer token in Authorization header', () => {
@@ -52,7 +49,16 @@ describe('Authentication utilities', () => {
     });
 
     it('should return false when API_KEY environment variable is not set', () => {
-      delete process.env.API_KEY;
+      // Re-mock the env module to have no API_KEY
+      jest.doMock('../../src/lib/env', () => ({
+        env: {
+          API_KEY: undefined
+        }
+      }));
+      
+      // Need to re-import after mocking
+      jest.resetModules();
+      const { validateApiKey: validateApiKeyNoEnv } = require('../../src/lib/auth');
       
       const request = createMockRequest('http://localhost:3000/api/test', {
         headers: {
@@ -60,7 +66,7 @@ describe('Authentication utilities', () => {
         },
       });
 
-      expect(validateApiKey(request)).toBe(false);
+      expect(validateApiKeyNoEnv(request)).toBe(false);
     });
   });
 

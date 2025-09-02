@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Spellcast Linear API",
-    "description": "API for managing Linear issues through Spellcast with smart name-to-ID translation. All endpoints require authentication using a Bearer token in the Authorization header. The API automatically resolves human-readable names to Linear IDs: use team names/keys, user emails/names, project names, and state names instead of UUIDs. The API supports setting a default project via the DEFAULT_PROJECT_ID environment variable.",
-    "version": "1.0.0",
+    "title": "Spellcast AgenticTrace API",
+    "description": "API for managing AgenticTraces - comprehensive tracking of multi-agent workflows with events, handovers, and tracing capabilities. All endpoints require authentication using a Bearer token in the Authorization header.",
+    "version": "2.0.0",
     "contact": {
       "name": "Spellcast API Support"
     }
@@ -12,211 +12,20 @@
     {
       "url": "https://spellcast-ten.vercel.app/api",
       "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Development server"
     }
   ],
   "paths": {
-    "/linear/list": {
-      "get": {
-        "x-openai-isConsequential": false,
-        "operationId": "listLinearIssues",
-        "summary": "List Linear issues",
-        "description": "Retrieve a paginated list of Linear issues with optional filtering",
-        "tags": ["Linear Issues"],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "Number of issues to return (1-100)",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "description": "Number of issues to skip for pagination",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0
-            }
-          },
-          {
-            "name": "teamId",
-            "in": "query",
-            "description": "Filter issues by team (accepts team UUID, name, or key)",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved issues",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IssueListResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/linear/search": {
-      "get": {
-        "x-openai-isConsequential": false,
-        "operationId": "searchLinearIssues",
-        "summary": "Search Linear issues",
-        "description": "Search and filter Linear issues by various criteria",
-        "tags": ["Linear Issues"],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "query",
-            "in": "query",
-            "description": "Text query to search in issue titles and descriptions",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "teamId",
-            "in": "query",
-            "description": "Filter by team (accepts team UUID, name, or key)",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "assigneeId",
-            "in": "query",
-            "description": "Filter by assignee (accepts user UUID, email, username, or display name)",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "stateId",
-            "in": "query",
-            "description": "Filter by state (accepts state UUID or name)",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "projectId",
-            "in": "query",
-            "description": "Filter by project (accepts project UUID or name)",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "Number of issues to return",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 50
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "description": "Number of issues to skip for pagination",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved search results",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IssueSearchResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/linear/create": {
+    "/traces": {
       "post": {
         "x-openai-isConsequential": false,
-        "operationId": "createLinearIssue",
-        "summary": "Create a new Linear issue",
-        "description": "Create a new issue in Linear with the provided details",
-        "tags": ["Linear Issues"],
+        "operationId": "createTrace",
+        "summary": "Create a new agentic trace",
+        "description": "Create a new agentic trace for tracking multi-agent workflows. Supports both blocking and non-blocking modes.",
+        "tags": ["AgenticTrace"],
         "security": [
           {
             "BearerAuth": []
@@ -227,18 +36,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateIssueRequest"
+                "$ref": "#/components/schemas/CreateTraceRequest"
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Successfully created issue",
+          "201": {
+            "description": "Successfully created trace",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueResponse"
+                  "$ref": "#/components/schemas/TraceResponse"
                 }
               }
             }
@@ -253,6 +62,126 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "x-openai-isConsequential": false,
+        "operationId": "listTraces",
+        "summary": "List agentic traces",
+        "description": "Retrieve a paginated list of agentic traces with cursor-based pagination and field selection.",
+        "tags": ["AgenticTrace"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor for pagination (trace ID)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of traces to return (1-100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Field to order results by",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "updatedAt", "name"],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "orderDirection",
+            "in": "query",
+            "description": "Order direction",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma-separated list of fields to include in response",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "id,name,status,createdAt"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved traces",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracesListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -266,13 +195,13 @@
         }
       }
     },
-    "/linear/{id}": {
+    "/traces/{id}": {
       "get": {
         "x-openai-isConsequential": false,
-        "operationId": "getLinearIssue",
-        "summary": "Get a specific Linear issue",
-        "description": "Retrieve a specific Linear issue by its ID",
-        "tags": ["Linear Issues"],
+        "operationId": "getTrace",
+        "summary": "Get a specific agentic trace",
+        "description": "Retrieve a specific agentic trace by its ID with optional field selection.",
+        "tags": ["AgenticTrace"],
         "security": [
           {
             "BearerAuth": []
@@ -282,26 +211,47 @@
           {
             "name": "id",
             "in": "path",
-            "description": "The ID of the Linear issue to retrieve",
+            "description": "The ID of the trace to retrieve",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma-separated list of fields to include in response",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "id,name,status,events,createdAt"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved issue",
+            "description": "Successfully retrieved trace",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueResponse"
+                  "$ref": "#/components/schemas/TraceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
           "404": {
-            "description": "Issue not found",
+            "description": "Trace not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -324,10 +274,10 @@
       },
       "put": {
         "x-openai-isConsequential": false,
-        "operationId": "updateLinearIssue",
-        "summary": "Update a Linear issue",
-        "description": "Update an existing Linear issue with the provided details",
-        "tags": ["Linear Issues"],
+        "operationId": "updateTrace",
+        "summary": "Update an agentic trace",
+        "description": "Update an existing agentic trace with new events or status changes.",
+        "tags": ["AgenticTrace"],
         "security": [
           {
             "BearerAuth": []
@@ -337,10 +287,11 @@
           {
             "name": "id",
             "in": "path",
-            "description": "The ID of the Linear issue to update",
+            "description": "The ID of the trace to update",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -349,18 +300,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateIssueRequest"
+                "$ref": "#/components/schemas/UpdateTraceRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successfully updated issue",
+            "description": "Successfully updated trace",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueResponse"
+                  "$ref": "#/components/schemas/TraceResponse"
                 }
               }
             }
@@ -375,8 +326,99 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
-            "description": "Issue not found",
+            "description": "Trace not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "x-openai-isConsequential": false,
+        "operationId": "deleteTrace",
+        "summary": "Delete an agentic trace",
+        "description": "Delete a specific agentic trace and all associated data.",
+        "tags": ["AgenticTrace"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the trace to delete",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted trace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Trace deleted successfully"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Trace not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -408,142 +450,202 @@
       }
     },
     "schemas": {
-      "Issue": {
+      "AgentType": {
+        "type": "string",
+        "enum": ["planner", "executor", "reviewer", "researcher", "writer", "analyst", "coordinator"],
+        "description": "The type of agent performing the operation"
+      },
+      "TraceStatus": {
+        "type": "string",
+        "enum": ["pending", "running", "completed", "failed"],
+        "description": "The current status of the trace"
+      },
+      "Handover": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "The unique identifier of the issue"
+            "format": "uuid",
+            "description": "Unique identifier for the handover"
           },
-          "title": {
+          "input": {
             "type": "string",
-            "description": "The title of the issue"
+            "description": "Input data for the target agent"
           },
-          "description": {
+          "timestamp": {
             "type": "string",
-            "nullable": true,
-            "description": "The description of the issue"
+            "format": "date-time",
+            "description": "When the handover occurred"
           },
-          "number": {
+          "targetAgent": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Additional handover metadata"
+          }
+        },
+        "required": ["id", "input", "timestamp", "targetAgent"]
+      },
+      "AgentEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the event"
+          },
+          "input": {
+            "type": "string",
+            "description": "Input data for the agent"
+          },
+          "agentType": {
+            "$ref": "#/components/schemas/AgentType"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the event occurred"
+          },
+          "duration": {
             "type": "number",
-            "description": "The sequential number of the issue"
+            "minimum": 0,
+            "description": "Duration in milliseconds"
           },
-          "url": {
+          "outcome": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Event outcome data"
+          },
+          "markdown": {
             "type": "string",
-            "description": "The URL to view the issue in Linear"
+            "description": "Markdown description of the event"
           },
-          "priority": {
-            "type": "number",
-            "nullable": true,
-            "description": "The priority level of the issue"
+          "handovers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Handover"
+            },
+            "description": "Handovers to other agents"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Additional event metadata"
+          }
+        },
+        "required": ["id", "input", "agentType", "timestamp", "outcome"]
+      },
+      "AgenticTrace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the trace"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Human-readable name for the trace"
+          },
+          "initialInput": {
+            "type": "string",
+            "description": "The initial input that started the trace"
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When the issue was created"
+            "description": "When the trace was created"
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When the issue was last updated"
+            "description": "When the trace was last updated"
           },
-          "team": {
-            "$ref": "#/components/schemas/TeamInfo",
-            "description": "The team this issue belongs to"
-          },
-          "assignee": {
-            "$ref": "#/components/schemas/UserInfo",
-            "description": "The user assigned to this issue"
-          },
-          "project": {
-            "$ref": "#/components/schemas/ProjectInfo",
-            "description": "The project this issue is attached to"
-          },
-          "state": {
-            "$ref": "#/components/schemas/StateInfo",
-            "description": "The current state of this issue"
-          }
-        },
-        "required": ["id", "title", "number", "url", "createdAt", "updatedAt"]
-      },
-      "CreateIssueRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "The title of the issue"
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the issue"
-          },
-          "teamId": {
-            "type": "string",
-            "description": "The team to create the issue in (accepts team UUID, name, or key)"
-          },
-          "assigneeId": {
-            "type": "string",
-            "description": "The user to assign the issue to (accepts user UUID, email, username, or display name)"
-          },
-          "priority": {
+          "duration": {
             "type": "number",
-            "description": "The priority level of the issue"
+            "minimum": 0,
+            "description": "Total duration in milliseconds"
           },
-          "labelIds": {
+          "events": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/AgentEvent"
             },
-            "description": "Array of label IDs to attach to the issue"
+            "description": "Ordered list of agent events"
           },
-          "projectId": {
-            "type": "string",
-            "description": "The project to attach the issue to (accepts project UUID or name). If not provided, the DEFAULT_PROJECT_ID environment variable will be used if set."
+          "status": {
+            "$ref": "#/components/schemas/TraceStatus"
           },
-          "stateId": {
-            "type": "string",
-            "description": "The state to set for the issue (accepts state UUID or name)"
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Additional trace metadata"
           }
         },
-        "required": ["title", "teamId"]
+        "required": ["id", "name", "initialInput", "createdAt", "updatedAt", "events", "status"]
       },
-      "UpdateIssueRequest": {
+      "CreateTraceRequest": {
         "type": "object",
         "properties": {
-          "title": {
+          "name": {
             "type": "string",
-            "description": "The title of the issue"
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Human-readable name for the trace"
           },
-          "description": {
+          "input": {
             "type": "string",
-            "description": "The description of the issue"
+            "minLength": 1,
+            "description": "Initial input to process"
           },
-          "assigneeId": {
-            "type": "string",
-            "description": "The user to assign the issue to (accepts user UUID, email, username, or display name)"
+          "firstAgent": {
+            "$ref": "#/components/schemas/AgentType",
+            "description": "The first agent to use (optional)"
           },
-          "priority": {
+          "blocking": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to process synchronously (blocking) or asynchronously"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Additional trace metadata"
+          }
+        },
+        "required": ["name", "input"]
+      },
+      "UpdateTraceRequest": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AgentEvent"
+              }
+            ],
+            "description": "Add a new event to the trace"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TraceStatus",
+            "description": "Update trace status"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Update trace metadata"
+          },
+          "duration": {
             "type": "number",
-            "description": "The priority level of the issue"
-          },
-          "labelIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Array of label IDs to attach to the issue"
-          },
-          "projectId": {
-            "type": "string",
-            "description": "The project to attach the issue to (accepts project UUID or name)"
-          },
-          "stateId": {
-            "type": "string",
-            "description": "The state to set for the issue (accepts state UUID or name)"
+            "minimum": 0,
+            "description": "Update total duration in milliseconds"
           }
         }
       },
-      "IssueResponse": {
+      "TraceResponse": {
         "type": "object",
         "properties": {
           "success": {
@@ -551,12 +653,12 @@
             "example": true
           },
           "data": {
-            "$ref": "#/components/schemas/Issue"
+            "$ref": "#/components/schemas/AgenticTrace"
           }
         },
         "required": ["success", "data"]
       },
-      "IssueListResponse": {
+      "TracesListResponse": {
         "type": "object",
         "properties": {
           "success": {
@@ -566,180 +668,45 @@
           "data": {
             "type": "object",
             "properties": {
-              "issues": {
+              "traces": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/Issue"
+                  "$ref": "#/components/schemas/AgenticTrace"
                 }
-              },
-              "totalCount": {
-                "type": "number",
-                "description": "Total number of issues returned"
-              },
-              "hasNextPage": {
-                "type": "boolean",
-                "description": "Whether there are more issues available"
-              },
-              "hasPreviousPage": {
-                "type": "boolean",
-                "description": "Whether there are previous issues available"
               },
               "pagination": {
                 "type": "object",
                 "properties": {
-                  "limit": {
-                    "type": "number",
-                    "description": "The limit used for pagination"
-                  },
-                  "offset": {
-                    "type": "number",
-                    "description": "The offset used for pagination"
-                  }
-                },
-                "required": ["limit", "offset"]
-              }
-            },
-            "required": ["issues", "totalCount", "hasNextPage", "hasPreviousPage", "pagination"]
-          }
-        },
-        "required": ["success", "data"]
-      },
-      "IssueSearchResponse": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "issues": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Issue"
-                }
-              },
-              "totalCount": {
-                "type": "number",
-                "description": "Total number of issues returned"
-              },
-              "hasNextPage": {
-                "type": "boolean",
-                "description": "Whether there are more issues available"
-              },
-              "hasPreviousPage": {
-                "type": "boolean",
-                "description": "Whether there are previous issues available"
-              },
-              "appliedFilters": {
-                "type": "object",
-                "description": "The resolved filter information showing both IDs and names",
-                "properties": {
-                  "team": {
-                    "$ref": "#/components/schemas/TeamInfo"
-                  },
-                  "assignee": {
-                    "$ref": "#/components/schemas/UserInfo"
-                  },
-                  "project": {
-                    "$ref": "#/components/schemas/ProjectInfo"
-                  },
-                  "state": {
-                    "$ref": "#/components/schemas/StateInfo"
-                  },
-                  "query": {
+                  "cursor": {
                     "type": "string",
                     "nullable": true,
-                    "description": "The text query used for searching"
+                    "description": "Current cursor position"
+                  },
+                  "nextCursor": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Cursor for next page"
+                  },
+                  "hasMore": {
+                    "type": "boolean",
+                    "description": "Whether there are more results"
+                  },
+                  "orderBy": {
+                    "type": "string",
+                    "description": "Field used for ordering"
+                  },
+                  "orderDirection": {
+                    "type": "string",
+                    "description": "Order direction"
                   }
-                }
+                },
+                "required": ["cursor", "nextCursor", "hasMore", "orderBy", "orderDirection"]
               }
             },
-            "required": ["issues", "totalCount", "hasNextPage", "hasPreviousPage", "appliedFilters"]
+            "required": ["traces", "pagination"]
           }
         },
         "required": ["success", "data"]
-      },
-      "TeamInfo": {
-        "type": "object",
-        "nullable": true,
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The team UUID"
-          },
-          "name": {
-            "type": "string",
-            "description": "The team name"
-          },
-          "key": {
-            "type": "string",
-            "description": "The team key"
-          }
-        },
-        "required": ["id", "name", "key"]
-      },
-      "UserInfo": {
-        "type": "object",
-        "nullable": true,
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The user UUID"
-          },
-          "name": {
-            "type": "string",
-            "description": "The user's full name"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "The user's display name"
-          },
-          "email": {
-            "type": "string",
-            "description": "The user's email address"
-          }
-        },
-        "required": ["id", "name", "displayName", "email"]
-      },
-      "ProjectInfo": {
-        "type": "object",
-        "nullable": true,
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The project UUID"
-          },
-          "name": {
-            "type": "string",
-            "description": "The project name"
-          }
-        },
-        "required": ["id", "name"]
-      },
-      "StateInfo": {
-        "type": "object",
-        "nullable": true,
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The state UUID"
-          },
-          "name": {
-            "type": "string",
-            "description": "The state name"
-          },
-          "type": {
-            "type": "string",
-            "description": "The state type (e.g., 'started', 'completed')"
-          },
-          "color": {
-            "type": "string",
-            "description": "The state color (hex color code)"
-          }
-        },
-        "required": ["id", "name", "type", "color"]
       },
       "ErrorResponse": {
         "type": "object",
@@ -751,6 +718,10 @@
           "error": {
             "type": "string",
             "description": "Error message describing what went wrong"
+          },
+          "details": {
+            "type": "string",
+            "description": "Additional error details"
           }
         },
         "required": ["success", "error"]
@@ -759,8 +730,8 @@
   },
   "tags": [
     {
-      "name": "Linear Issues",
-      "description": "Operations related to Linear issue management"
+      "name": "AgenticTrace",
+      "description": "Operations for managing agentic traces and multi-agent workflows"
     }
   ]
 }

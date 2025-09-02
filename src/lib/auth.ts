@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { env } from './env';
 
 /**
  * Validates API key from Authorization header (Bearer token)
@@ -6,23 +7,21 @@ import { NextRequest } from 'next/server';
  * @returns boolean - true if authentication is valid
  */
 export function validateApiKey(request: NextRequest): boolean {
-  const apiKey = process.env.API_KEY;
-  
-  if (!apiKey) {
-    console.error('API_KEY environment variable is not set');
+  try {
+    // Check Authorization header (Bearer token)
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      if (token === env.API_KEY) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error validating API key:', error);
     return false;
   }
-
-  // Check Authorization header (Bearer token)
-  const authHeader = request.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    if (token === apiKey) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /**
