@@ -229,7 +229,3 @@ npm run dev               # Development server
 - Input validation with Zod schemas
 - No API keys exposed in logs or responses
 - Secure agent-to-service communication
-
-## License
-
-[Your License Here]
