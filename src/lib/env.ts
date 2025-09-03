@@ -58,6 +58,9 @@ export const env = {
   LINEAR_API_KEY: getOptionalEnvVar('LINEAR_API_KEY'),
   DEFAULT_PROJECT_ID: getOptionalEnvVar('DEFAULT_PROJECT_ID'),
   
+  // Vercel Configuration
+  VERCEL_API_KEY: getOptionalEnvVar('VERCEL_API_KEY'),
+  
   // Firebase Configuration
   FIREBASE_SERVICE_ACCOUNT: getEnvVar('FIREBASE_SERVICE_ACCOUNT'),
   FIREBASE_DATABASE_URL: getOptionalEnvVar('FIREBASE_DATABASE_URL'),

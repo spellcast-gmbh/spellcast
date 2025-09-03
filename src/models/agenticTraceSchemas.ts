@@ -4,10 +4,11 @@ import { z } from 'zod';
 export const AgentTypeSchema = z.enum([
   'coordinator',
   'linear',
+  'hosting',
 ]);
 
-// ID validation - accepts any string (not just UUIDs)
-const IdSchema = z.string().min(1);
+// ID validation - validates UUID format
+const IdSchema = z.string().uuid();
 
 // ISO datetime validation  
 const DateTimeSchema = z.string().datetime();

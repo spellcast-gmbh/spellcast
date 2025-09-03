@@ -42,7 +42,7 @@ export const mockAgenticTrace: AgenticTrace = {
 export const mockCreateTraceRequest = {
   name: 'Test Trace',
   prompt: 'Test input for processing',
-  agentHint: 'planner',
+  agentHint: 'coordinator',
 };
 
 /**
@@ -51,7 +51,7 @@ export const mockCreateTraceRequest = {
 export const mockCreateTraceRequestBlocking = {
   name: 'Blocking Test Trace',
   prompt: 'Test input for blocking processing',
-  agentHint: 'researcher',
+  agentHint: 'linear',
   blocking: true,
 };
 

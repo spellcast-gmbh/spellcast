@@ -1,230 +1,235 @@
-# Spellcast - Linear API Integration
+# Agentic Spellcast Framework
 
-A Next.js application that provides a RESTful API interface for managing Linear issues with API key authentication.
+A multi-agent framework built with OpenAI Agents that orchestrates specialized AI agents for project management and deployment monitoring. Designed to be integrated with custom GPTs for seamless workflow automation.
 
-## Features
+## Overview
 
-- 🔐 API Key authentication (Bearer token or query parameter)
-- 📝 Create, read, update, and search Linear issues
-- ✅ Input validation using Yup schemas
-- 🚀 Next.js 14 with App Router
-- 📘 TypeScript support
+This is an agentic framework that provides intelligent task delegation through specialized agents:
 
-## Setup
+- **🤖 Coordinator Agent**: Main orchestrator that routes tasks to specialized agents
+- **📋 Linear Agent**: Manages Linear issues, comments, and project workflows
+- **🚀 Hosting Agent**: Monitors Vercel deployments, logs, and infrastructure
 
-1. **Clone and install dependencies:**
-   ```bash
-   npm install
-   ```
+## Quick Start
 
-2. **Configure environment variables:**
-   
-   Copy `.env.example` to `.env.local` and fill in your API keys:
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Update the values in `.env.local`:
-   ```env
-   # Your application's API key for authentication
-   API_KEY=your_secure_api_key_here
-   
-   # Linear API key - Get this from https://linear.app/settings/api
-   LINEAR_API_KEY=your_linear_api_key_here
-   ```
+### 1. Environment Setup
 
-3. **Get your Linear API key:**
-   - Go to [Linear Settings > API](https://linear.app/settings/api)
-   - Create a new Personal API Key
-   - Copy the key to your `.env.local` file
-
-4. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-
-## Authentication
-
-All API endpoints require authentication via API key. You can provide the API key in two ways:
-
-### 1. Authorization Header (Recommended)
 ```bash
-curl -H "Authorization: Bearer your_api_key" http://localhost:3000/api/linear/list
+# Clone and install
+git clone <repository-url>
+cd spellcast
+npm install
+
+# Configure environment
+cp .env.example .env.local
 ```
 
-### 2. Query Parameter
+### 2. Configure API Keys
+
+Add your API keys to `.env.local`:
+
+```env
+# Required
+API_KEY=your_secure_api_key_here, used as a simple bearer
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional (agents only activate if keys are present)
+LINEAR_API_KEY=your_linear_api_key_here    # For Linear integration
+VERCEL_API_KEY=your_vercel_api_key_here    # For Vercel monitoring
+
+# Firebase (for trace storage)
+FIREBASE_SERVICE_ACCOUNT={"type": "service_account", ...}
+FIREBASE_PROJECT_ID=your_project_id
+```
+
+### 3. Run the Server
+
 ```bash
-curl "http://localhost:3000/api/linear/list?Bearer=your_api_key"
+npm run dev
+# Server runs on http://localhost:3000
 ```
 
-## API Endpoints
+## Custom GPT Integration
 
-### Create Issue
-**POST** `/api/linear/create`
+### Suggested System Prompt
 
-Create a new Linear issue.
+```
+You are an AI assistant that helps users manage their development workflow using the Agentic Spellcast Framework. This system provides specialized agents for Linear project management and Vercel deployment monitoring.
 
-**Request Body:**
-```json
-{
-  "title": "Issue title",
-  "description": "Issue description (optional)",
-  "teamId": "team-id-here",
-  "assigneeId": "user-id-here (optional)",
-  "priority": 2,
-  "labelIds": ["label-1", "label-2"],
-  "projectId": "project-id-here (optional)",
-  "stateId": "state-id-here (optional)"
-}
+**Available Capabilities:**
+- **Linear Integration**: Create, search, update issues and comments across teams and projects
+- **Vercel Monitoring**: Monitor deployments, check status, analyze logs, and manage projects  
+- **Smart Routing**: Automatically delegate tasks to the appropriate specialized agent
+
+**Base API URL:** https://your-spellcast-domain.com
+**Authentication:** Use the provided API key in the Authorization header
+
+**Usage Guidelines:**
+1. Always check which services are available before suggesting actions
+2. For Linear tasks (issues, bugs, tickets): Use the Linear agent
+3. For deployment monitoring (Vercel, hosting, logs): Use the Hosting agent  
+4. For general queries or multi-step workflows: Use the Coordinator agent
+5. Provide clear, structured responses with next steps when appropriate
+
+**API Usage:**
+- POST /api/traces - Create new agent trace with task description
+- GET /api/traces - List all traces and their status
+- GET /api/traces/{id} - Get detailed trace results and events
+
+Always provide helpful context about what actions will be taken and suggest relevant follow-up tasks.
+
 ```
 
-**Example:**
-```bash
-curl -X POST \
-  -H "Authorization: Bearer your_api_key" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Fix login bug", "teamId": "your-team-id"}' \
-  http://localhost:3000/api/linear/create
-```
+## Available Agents
 
-### Get Issue
-**GET** `/api/linear/{issueId}`
+### Coordinator Agent
+**Purpose**: Main orchestrator that routes requests to specialized agents  
+**Capabilities**: 
+- Intelligent task routing
+- Multi-agent workflow coordination
+- General assistance and web search
 
-Retrieve a specific issue by ID.
+### Linear Agent  
+**Purpose**: Linear issue and project management  
+**Capabilities**:
+- Create, search, and update issues
+- Manage comments and discussions
+- Handle team, user, and project resolution
+- Issue state and priority management
 
-**Example:**
-```bash
-curl -H "Authorization: Bearer your_api_key" \
-  http://localhost:3000/api/linear/issue-id-here
-```
+**Tools Available**:
+- `create_issue` - Create new Linear issues
+- `search_issues` - Search issues by various criteria  
+- `get_issue` - Get detailed issue information
+- `update_issue` - Update existing issues
+- `get_issue_comments` - Retrieve issue comments
+- `add_comment` - Add comments to issues
 
-### Update Issue
-**PUT** `/api/linear/{issueId}`
+### Hosting Agent
+**Purpose**: Vercel deployment monitoring and management  
+**Capabilities**:
+- Monitor deployment status and health
+- Analyze build and runtime logs
+- Track deployment history
+- Project management
 
-Update an existing issue.
+**Tools Available**:
+- `get_deployments` - List deployments with status
+- `get_deployment_status` - Get detailed deployment info
+- `get_deployment_logs` - Retrieve build/runtime logs  
+- `get_projects` - List all Vercel projects
 
-**Request Body (all fields optional):**
-```json
-{
-  "title": "Updated title",
-  "description": "Updated description",
-  "assigneeId": "new-assignee-id",
-  "priority": 1,
-  "stateId": "new-state-id"
-}
-```
+## API Reference
 
-**Example:**
-```bash
-curl -X PUT \
-  -H "Authorization: Bearer your_api_key" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Updated title", "priority": 1}' \
-  http://localhost:3000/api/linear/issue-id-here
-```
+Just check the swagger ui at `/api/docs/ui`
 
-### Search Issues
-**GET** `/api/linear/search`
+## Adding New Agents
 
-Search for issues with various filters.
+To extend the framework with additional agents:
 
-**Query Parameters:**
-- `query` - Text search in title/description
-- `teamId` - Filter by team ID
-- `assigneeId` - Filter by assignee ID
-- `stateId` - Filter by state ID
-- `projectId` - Filter by project ID
-- `limit` - Number of results (1-100, default: 50)
-- `offset` - Pagination offset
+### 1. Create Agent Implementation
 
-**Example:**
-```bash
-curl -H "Authorization: Bearer your_api_key" \
-  "http://localhost:3000/api/linear/search?query=bug&teamId=your-team-id&limit=10"
-```
+Create a new agent file in `src/agents/`:
 
-### List Issues
-**GET** `/api/linear/list`
+```typescript
+// src/agents/my-agent.ts
+import { Agent, tool } from '@openai/agents';
+import { AgentTracing, ToolTracing } from './util';
 
-List all issues with pagination.
-
-**Query Parameters:**
-- `limit` - Number of results (1-100, default: 50)
-- `offset` - Pagination offset
-- `teamId` - Filter by team ID (optional)
-
-**Example:**
-```bash
-curl -H "Authorization: Bearer your_api_key" \
-  "http://localhost:3000/api/linear/list?limit=20&teamId=your-team-id"
-```
-
-## Response Format
-
-All endpoints return responses in the following format:
-
-**Success Response:**
-```json
-{
-  "success": true,
-  "data": {
-    // Response data here
+const myTool: ToolTracing = (t) => tool({
+  name: 'my_tool',
+  description: 'Description of what this tool does',
+  parameters: z.object({
+    param: z.string().describe('Parameter description')
+  }),
+  async execute({ param }) {
+    // Tool implementation
+    return { result: 'success' };
   }
+});
+
+export const myAgent: AgentTracing = (t) => new Agent({
+  name: 'My Agent',
+  instructions: 'Agent instructions here',
+  tools: [myTool(t)]
+});
+```
+
+### 2. Update Type Schemas
+
+Add your agent to the schema in `src/models/agenticTraceSchemas.ts`:
+
+```typescript
+export const AgentTypeSchema = z.enum([
+  'coordinator',
+  'linear', 
+  'hosting',
+  'my-agent', // Add your agent here
+]);
+```
+
+### 3. Update Swagger Documentation
+
+Add your agent's tools to the `AgentType` schema in `public/swagger.json` to document the API capabilities.
+
+### 4. Add to Coordinator
+
+Update `src/agents/coordinator.ts` to include handoff to your agent:
+
+```typescript
+import { myAgentHandoff } from './my-agent';
+
+// Add conditional handoff based on required API keys
+if (env.MY_SERVICE_API_KEY) {
+  handoffs.push(myAgentHandoff(t));
 }
 ```
 
-**Error Response:**
-```json
-{
-  "success": false,
-  "error": "Error message here"
-}
-```
+### 5. Resources
 
-## Issue Data Structure
-
-Issues are returned with the following structure:
-
-```json
-{
-  "id": "issue-id",
-  "title": "Issue title",
-  "description": "Issue description",
-  "number": 123,
-  "url": "https://linear.app/team/issue/ABC-123",
-  "priority": 2,
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-01-01T00:00:00.000Z"
-}
-```
+- **OpenAI Agents Documentation**: https://openai.github.io/openai-agents-js/
+- **Agent Patterns**: See existing agents in `src/agents/` for implementation examples
+- **Tool Creation**: Follow the pattern in existing tools for consistent error handling and tracing
 
 ## Development
 
-The project structure:
+### Project Structure
 
 ```
 src/
-├── app/
-│   └── api/
-│       └── linear/           # API routes
-├── lib/
-│   ├── auth.ts              # Authentication utilities
-│   └── linear.ts            # Linear client setup
-├── models/
-│   └── issueSchemas.ts      # Yup validation schemas
-└── middleware.ts            # API authentication middleware
+├── agents/           # Agent implementations
+│   ├── coordinator.ts    # Main orchestrator
+│   ├── linear-agent.ts   # Linear integration  
+│   ├── hosting-agent.ts  # Vercel monitoring
+│   └── util.ts          # Agent utilities
+├── app/api/         # REST API endpoints
+├── lib/             # Utilities and services
+├── models/          # TypeScript schemas
+└── __tests__/       # Test suites
 ```
 
-## Error Handling
+### Testing
 
-- **400 Bad Request**: Invalid input data or validation errors
-- **401 Unauthorized**: Missing or invalid API key
-- **404 Not Found**: Issue not found
-- **500 Internal Server Error**: Server-side errors
+```bash
+npm test                    # Run all tests
+npm test hosting-agent     # Run specific agent tests
+```
+
+### Building
+
+```bash
+npm run build              # Production build
+npm run dev               # Development server
+```
 
 ## Security
 
-- API keys are validated on all requests
-- Input validation using Yup schemas
-- Environment variables for sensitive data
-- No API keys logged or exposed in responses
+- API key authentication on all endpoints
+- Environment variable protection
+- Input validation with Zod schemas
+- No API keys exposed in logs or responses
+- Secure agent-to-service communication
+
+## License
+
+[Your License Here]

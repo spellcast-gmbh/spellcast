@@ -18,6 +18,8 @@
     "@linear/sdk": "^57.0.0",
     "@openai/agents": "^0.1.0",
     "@types/uuid": "^10.0.0",
+    "@vercel/node": "^5.3.19",
+    "@vercel/sdk": "^1.10.6",
     "firebase-admin": "^13.5.0",
     "next": "15.5.0",
     "react": "19.1.0",

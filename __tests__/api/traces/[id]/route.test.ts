@@ -153,18 +153,15 @@ describe('/api/traces/[id]', () => {
     it('should add an event to a trace', async () => {
       const trace = testTraces[0];
       const eventToAdd = {
-        input: 'New event input',
-        agentType: 'executor',
-        timestamp: new Date().toISOString(),
-        duration: 2000,
-        outcome: {
+        type: 'tool',
+        agent: 'coordinator',
+        input: { task: 'New event input' },
+        output: { 
           success: true,
           result: 'Task completed',
-          type: 'completion'
         },
         markdown: '## Task Results\n\nSuccessfully executed the task.',
-        handovers: [],
-        agentHint: 'executor',
+        timestamp: new Date().toISOString(),
       };
 
       const request = createMockRequest(`http://localhost:3000/api/traces/${trace.id}`, {

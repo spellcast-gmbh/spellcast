@@ -1,4 +1,4 @@
-import { Agent, handoff, tool } from '@openai/agents';
+import { Agent, handoff, tool, webSearchTool } from '@openai/agents';
 import { LinearClient } from '@linear/sdk';
 import { env } from '../lib/env';
 import { z } from 'zod';
@@ -609,6 +609,154 @@ const updateIssueTool: ToolTracing = (t) => tool({
   }
 });
 
+const getIssueCommentsTool: ToolTracing = (t) => tool({
+  name: 'get_issue_comments',
+  description: 'Get all comments for a specific issue',
+  parameters: z.object({
+    id: z.string().describe('Issue ID')
+  }),
+  async execute({ id }) {
+    try {
+      const issue = await linearService.client.issue(id);
+      if (!issue) {
+        throw new Error('Issue not found');
+      }
+
+      const comments = await issue.comments();
+      
+      const formattedComments = await Promise.all(
+        comments.nodes.map(async (comment) => {
+          const user = await comment.user;
+          return {
+            id: comment.id,
+            body: comment.body,
+            createdAt: comment.createdAt.toISOString(),
+            updatedAt: comment.updatedAt.toISOString(),
+            user: user ? {
+              id: user.id,
+              name: user.name,
+              displayName: user.displayName,
+              email: user.email
+            } : null,
+          };
+        })
+      );
+
+      const result = {
+        issueId: id,
+        comments: formattedComments,
+        totalCount: formattedComments.length
+      };
+
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'get_issue_comments',
+          id
+        },
+        agent: 'linear',
+        output: result,
+        timestamp: new Date().toISOString(),
+        markdown: `Found ${formattedComments.length} comments for issue ${id}.`
+      });
+
+      return result;
+    } catch (error) {
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'get_issue_comments',
+          id
+        },
+        agent: 'linear',
+        output: {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString(),
+        markdown: `Failed to get comments for issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+      return {
+        error: `Failed to get comments for issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
+    }
+  }
+});
+
+const addCommentTool: ToolTracing = (t) => tool({
+  name: 'add_comment',
+  description: 'Add a comment to a specific issue',
+  parameters: z.object({
+    issueId: z.string().describe('Issue ID to add comment to'),
+    body: z.string().min(1).describe('Comment content in markdown format')
+  }),
+  async execute({ issueId, body }) {
+    try {
+      const issue = await linearService.client.issue(issueId);
+      if (!issue) {
+        throw new Error('Issue not found');
+      }
+
+      const commentPayload = await linearService.client.createComment({
+        issueId,
+        body
+      });
+
+      const comment = await commentPayload.comment;
+      if (!comment) {
+        throw new Error('Failed to create comment');
+      }
+
+      const user = await comment.user;
+      
+      const result = {
+        id: comment.id,
+        body: comment.body,
+        issueId: issueId,
+        createdAt: comment.createdAt.toISOString(),
+        user: user ? {
+          id: user.id,
+          name: user.name,
+          displayName: user.displayName,
+          email: user.email
+        } : null,
+      };
+
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'add_comment',
+          issueId,
+          body
+        },
+        agent: 'linear',
+        output: result,
+        timestamp: new Date().toISOString(),
+        markdown: `Added comment to issue ${issueId}.`
+      });
+
+      return result;
+    } catch (error) {
+      await agenticTraceService.addEventToTrace(t.id, {
+        type: 'tool',
+        input: {
+          tool: 'add_comment',
+          issueId,
+          body
+        },
+        agent: 'linear',
+        output: {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString(),
+        markdown: `Failed to add comment: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+      return {
+        error: `Failed to add comment: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
+    }
+  }
+});
+
 export const linearAgent: AgentTracing = (t) => new Agent({
   name: 'Linear Agent',
   instructions: `${RECOMMENDED_PROMPT_PREFIX}
@@ -619,6 +767,8 @@ export const linearAgent: AgentTracing = (t) => new Agent({
     - Search for issues by text, team, assignee, state, or project
     - Get detailed information about specific issues
     - Update existing issues with new information
+    - Get comments from issues
+    - Add comments to issues
     
     You can resolve team names, user names/emails, project names, and state names to their IDs automatically.
     Always provide helpful, structured responses about Linear issues.`,
@@ -626,7 +776,10 @@ export const linearAgent: AgentTracing = (t) => new Agent({
     createIssueTool(t),
     searchIssuesTool(t),
     getIssueTool(t),
-    updateIssueTool(t)
+    updateIssueTool(t),
+    getIssueCommentsTool(t),
+    addCommentTool(t),
+    webSearchTool()
   ]
 });
 

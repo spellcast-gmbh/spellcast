@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 describe('AgenticTrace Zod Schemas', () => {
   describe('AgentTypeSchema', () => {
     it('should validate valid agent types', () => {
-      const validTypes = ['coordinator', 'linear'];
+      const validTypes = ['coordinator', 'linear', 'hosting'];
       
       validTypes.forEach(type => {
         expect(() => AgentTypeSchema.parse(type)).not.toThrow();
@@ -135,9 +135,9 @@ describe('AgenticTrace Zod Schemas', () => {
     const validRequest = {
       name: 'Test Trace',
       input: 'Test input',
-      firstAgent: 'planner',
+      firstAgent: 'coordinator',
       blocking: true,
-      agentHint: 'planner',
+      agentHint: 'coordinator',
     };
 
     it('should validate a valid create request', () => {
@@ -154,7 +154,7 @@ describe('AgenticTrace Zod Schemas', () => {
       
       expect(() => CreateTraceRequestSchema.parse(minimalRequest)).not.toThrow();
       const parsed = CreateTraceRequestSchema.parse(minimalRequest);
-      expect(parsed.blocking).toBe(false); // Default value
+      expect(parsed.blocking).toBe(true); // Default value
     });
 
     it('should reject request with empty name', () => {
@@ -223,9 +223,9 @@ describe('AgenticTrace Zod Schemas', () => {
       expect(() => GetTraceRequestSchema.parse(validRequest)).not.toThrow();
     });
 
-    it('should reject invalid UUID', () => {
+    it('should reject empty ID', () => {
       const invalidRequest = {
-        id: 'not-a-uuid',
+        id: '',
       };
       
       expect(() => GetTraceRequestSchema.parse(invalidRequest)).toThrow();

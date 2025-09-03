@@ -2,6 +2,17 @@
 process.env.NODE_ENV = 'test';
 process.env.API_KEY = 'test-api-key';
 process.env.LINEAR_API_KEY = 'test-linear-api-key';
+process.env.VERCEL_API_KEY = 'test-vercel-api-key';
+process.env.OPENAI_API_KEY = 'test-openai-api-key';
+process.env.FIREBASE_SERVICE_ACCOUNT = JSON.stringify({
+  type: 'service_account',
+  project_id: 'test-project',
+  client_email: 'test@test.com',
+  private_key: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n'
+});
+process.env.FIREBASE_PROJECT_ID = 'test-project';
+process.env.FIREBASE_DATABASE_URL = 'https://test-project.firebaseio.com';
+process.env.BASE_URL = 'http://localhost:3000';
 
 // Mock the Linear SDK
 jest.mock('@linear/sdk', () => {

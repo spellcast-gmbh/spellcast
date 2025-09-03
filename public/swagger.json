@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Agentic Spellcast API",
-    "description": "API for managing AgenticTraces - comprehensive tracking of multi-agent workflows with events, handovers, and tracing capabilities. All endpoints require authentication using a Bearer token in the Authorization header.",
+    "description": "API for managing AgenticTraces - comprehensive tracking of multi-agent workflows with events, handoffs, tools, and tracing capabilities. All endpoints require authentication using a Bearer token in the Authorization header.",
     "version": "2.0.0",
     "contact": {
       "name": "Spellcast API Support"
@@ -24,7 +24,7 @@
         "x-openai-isConsequential": false,
         "operationId": "submitPrompt",
         "summary": "Submit a prompt for processing",
-        "description": "Submit a prompt with a name to create a new trace. Returns immediately with trace ID while processing happens asynchronously.",
+        "description": "Submit a prompt with a name to create a new trace. Returns immediately with trace ID while processing happens asynchronously. If blocking is true, the API will wait for the trace to complete before returning. Only use blocking mode if your request is a simple crud or other short lived request.",
         "tags": ["AgenticTrace"],
         "security": [
           {
@@ -293,7 +293,7 @@
     "schemas": {
       "AgentType": {
         "type": "string",
-        "enum": ["coordinator", "linear"],
+        "enum": ["coordinator", "linear", "hosting"],
         "description": "The type of agent performing the operation"
       },
       "TraceStatus": {

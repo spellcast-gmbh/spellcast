@@ -18,6 +18,9 @@ const customJestConfig = {
     '!src/app/layout.tsx',
     '!src/app/page.tsx',
   ],
+  moduleNameMapper: {
+    '^@vercel/sdk$': '<rootDir>/__tests__/__mocks__/@vercel/sdk.js',
+  },
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
