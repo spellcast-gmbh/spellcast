@@ -25,6 +25,10 @@ export class AgentProcessor {
 
       console.log(`Starting agent processing for trace ${traceId}:`, trace.initialInput);
 
+      await agenticTraceService.updateTrace(traceId, {
+        status: 'running'
+      });
+
       // Run the coordinator agent with the input
       const input = trace.initialInput + "\n\n If possible, use the agent " + trace.agentHint;
       await run(coordinator(trace), input);
@@ -49,48 +53,5 @@ export class AgentProcessor {
         duration
       });
     }
-  }
-
-  /**
-   * Start processing a trace asynchronously (fire and forget)
-   */
-  static startProcessing(traceId: string): void {
-    // Process the trace asynchronously without awaiting
-    this.processTrace(traceId).catch(error => {
-      console.error(`Failed to process trace ${traceId}:`, error);
-    });
-  }
-
-  /**
-   * Process a trace synchronously and wait for completion
-   */
-  static async processTraceBlocking(traceId: string): Promise<void> {
-    return this.processTrace(traceId);
-  }
-
-  /**
-   * Check if a trace is complete (finished processing)
-   */
-  static async isTraceComplete(traceId: string): Promise<boolean> {
-    const trace = await agenticTraceService.getTrace(traceId);
-    return trace ? ['completed', 'failed'].includes(trace.status) : false;
-  }
-
-  /**
-   * Wait for trace completion with timeout
-   */
-  static async waitForCompletion(traceId: string, timeoutMs: number = 30000): Promise<boolean> {
-    const startTime = Date.now();
-    
-    while (Date.now() - startTime < timeoutMs) {
-      if (await this.isTraceComplete(traceId)) {
-        return true;
-      }
-      
-      // Wait 1 second before checking again
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    
-    return false; // Timeout reached
   }
 }

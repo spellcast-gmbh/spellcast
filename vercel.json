@@ -1,0 +1,6 @@
+{
+    "crons": [{
+      "path": "/api/traces/processNext",
+      "schedule": "3 * * * *"
+    }]
+  }

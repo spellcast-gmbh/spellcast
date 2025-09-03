@@ -143,9 +143,17 @@ export class AgenticTraceFirebaseService {
     orderBy: 'createdAt' | 'updatedAt' | 'name';
     orderDirection: 'asc' | 'desc';
     fields?: string[];
+    onlyPending?: boolean;
   }) {
-    let query = this.db
-      .collection(COLLECTIONS.TRACES)
+    let query: any = this.db
+      .collection(COLLECTIONS.TRACES);
+
+    // Add status filter if onlyPending is true
+    if (options.onlyPending) {
+      query = query.where('status', '==', 'pending');
+    }
+
+    query = query
       .orderBy(options.orderBy, options.orderDirection)
       .limit(options.limit + 1); // +1 to check if there are more
 
@@ -162,7 +170,7 @@ export class AgenticTraceFirebaseService {
     }
 
     const snapshot = await query.get();
-    const traces = snapshot.docs.slice(0, options.limit).map(doc => {
+    const traces = snapshot.docs.slice(0, options.limit).map((doc: any) => {
       const data = this.convertFromFirestore(doc.data()) as AgenticTrace;
       
       // Apply field projection if specified

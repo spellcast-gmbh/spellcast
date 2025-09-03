@@ -45,28 +45,21 @@ export async function POST(request: NextRequest) {
 
     if (validatedData.blocking) {
       // Process synchronously and wait for completion
-      await AgentProcessor.processTraceBlocking(trace.id);
+      await AgentProcessor.processTrace(trace.id);
       
       // Get the updated trace with processing results
       const completedTrace = await agenticTraceService.getTrace(trace.id);
-      
+
       return NextResponse.json({
         success: true,
+        message: 'Agents have finished processing your request.',
         data: completedTrace
       }, { status: 201 });
     } else {
-      // Start agent processing asynchronously (fire and forget)
-      AgentProcessor.startProcessing(trace.id);
-
-      // Return the trace ID immediately
       return NextResponse.json({
         success: true,
-        data: {
-          id: trace.id,
-          name: trace.name,
-          status: trace.status,
-          createdAt: trace.createdAt
-        }
+        message: 'Agents preparing to process your request.',
+        data: trace
       }, { status: 201 });
     }
 
@@ -127,6 +120,7 @@ export async function GET(request: NextRequest) {
       orderBy: searchParams.get('orderBy') || undefined,
       orderDirection: searchParams.get('orderDirection') || undefined,
       fields: searchParams.get('fields') || undefined,
+      onlyPending: searchParams.get('onlyPending') ? searchParams.get('onlyPending') === 'true' : undefined,
     };
 
     // Remove undefined values
@@ -146,6 +140,7 @@ export async function GET(request: NextRequest) {
       orderBy: validatedParams.orderBy,
       orderDirection: validatedParams.orderDirection,
       fields,
+      onlyPending: validatedParams.onlyPending,
     });
 
     return NextResponse.json({

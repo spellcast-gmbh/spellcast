@@ -148,6 +148,16 @@
               "type": "string",
               "example": "id,name,status,createdAt"
             }
+          },
+          {
+            "name": "onlyPending",
+            "in": "query",
+            "description": "Filter for pending traces only",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -409,30 +419,15 @@
             "type": "boolean",
             "example": true
           },
+          "message": {
+            "type": ["string", "null"],
+            "description": "Message about the result"
+          },
           "data": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "description": "The unique identifier for the created trace"
-              },
-              "name": {
-                "type": "string",
-                "description": "The name of the trace"
-              },
-              "status": {
-                "$ref": "#/components/schemas/TraceStatus"
-              },
-              "createdAt": {
-                "type": "string",
-                "format": "date-time",
-                "description": "When the trace was created"
-              }
-            },
-            "required": ["id", "name", "status", "createdAt"]
+            "$ref": "#/components/schemas/AgenticTrace"
           }
         },
-        "required": ["success", "data"]
+        "required": ["success", "message", "data"]
       },
       "TraceResponse": {
         "type": "object",

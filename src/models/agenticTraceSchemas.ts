@@ -69,6 +69,7 @@ export const FieldsSchema = z.object({
 // List traces request
 export const ListTracesRequestSchema = PaginationRequestSchema.extend({
   fields: z.string().optional(), // comma-separated list of fields to include
+  onlyPending: z.boolean().optional(), // filter for pending traces only
 });
 
 // Get trace request
