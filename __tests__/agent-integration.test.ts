@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll } from '@jest/globals';
 import { env } from '@/lib/env';
-import { AgentProcessor } from '@/lib/agentProcessor';
+// Agent processor import removed as it's unused
 
 // Test configuration
 const API_BASE_URL = env.BASE_URL || 'http://localhost:3000';
@@ -9,7 +9,7 @@ const TEST_TIMEOUT = 60000; // 60 seconds
 
 interface ApiResponse {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
@@ -27,7 +27,7 @@ interface TraceResponse extends ApiResponse {
     id: string;
     name: string;
     status: string;
-    events: any[];
+    events: unknown[];
     duration?: number;
     createdAt: string;
     updatedAt: string;
@@ -204,13 +204,6 @@ describe('Agent Integration Tests', () => {
 });
 
 // Helper to extend Jest matchers
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toBeOneOf(expected: any[]): R;
-    }
-  }
-}
 
 expect.extend({
   toBeOneOf(received, expected) {

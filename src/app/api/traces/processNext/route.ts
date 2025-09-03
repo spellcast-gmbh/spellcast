@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
         );
       }
   
-      const { searchParams } = new URL(request.url);
+      // Parse URL for potential future use
+      new URL(request.url);
       
       // Extract and validate query parameters
       const queryParams = {

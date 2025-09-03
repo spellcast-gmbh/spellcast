@@ -48,7 +48,7 @@ describe('Authentication utilities', () => {
       expect(validateApiKey(request)).toBe(false);
     });
 
-    it('should return false when API_KEY environment variable is not set', () => {
+    it('should return false when API_KEY environment variable is not set', async () => {
       // Re-mock the env module to have no API_KEY
       jest.doMock('../../src/lib/env', () => ({
         env: {
@@ -58,7 +58,8 @@ describe('Authentication utilities', () => {
       
       // Need to re-import after mocking
       jest.resetModules();
-      const { validateApiKey: validateApiKeyNoEnv } = require('../../src/lib/auth');
+      const authModule = await import('../../src/lib/auth');
+      const { validateApiKey: validateApiKeyNoEnv } = authModule;
       
       const request = createMockRequest('http://localhost:3000/api/test', {
         headers: {

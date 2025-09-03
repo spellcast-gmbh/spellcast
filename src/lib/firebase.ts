@@ -145,8 +145,8 @@ export class AgenticTraceFirebaseService {
     fields?: string[];
     onlyPending?: boolean;
   }) {
-    let query: any = this.db
-      .collection(COLLECTIONS.TRACES);
+    let query = this.db
+      .collection(COLLECTIONS.TRACES) as FirebaseFirestore.Query;
 
     // Add status filter if onlyPending is true
     if (options.onlyPending) {
@@ -170,7 +170,7 @@ export class AgenticTraceFirebaseService {
     }
 
     const snapshot = await query.get();
-    const traces = snapshot.docs.slice(0, options.limit).map((doc: any) => {
+    const traces = snapshot.docs.slice(0, options.limit).map((doc) => {
       const data = this.convertFromFirestore(doc.data()) as AgenticTrace;
       
       // Apply field projection if specified

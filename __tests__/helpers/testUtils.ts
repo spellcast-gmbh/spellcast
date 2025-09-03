@@ -8,7 +8,7 @@ export function createMockRequest(
   options: {
     method?: string;
     headers?: Record<string, string>;
-    body?: any;
+    body?: unknown;
   } = {}
 ): NextRequest {
   const { method = 'GET', headers = {}, body } = options;

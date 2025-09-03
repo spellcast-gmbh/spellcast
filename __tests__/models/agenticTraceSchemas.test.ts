@@ -71,7 +71,8 @@ describe('AgenticTrace Zod Schemas', () => {
     });
 
     it('should reject event with missing required fields', () => {
-      const { output: _, ...eventWithoutOutput } = validEvent;
+      const eventWithoutOutput = { ...validEvent };
+      delete eventWithoutOutput.output;
       expect(() => AgentEventSchema.parse(eventWithoutOutput)).toThrow();
     });
   });

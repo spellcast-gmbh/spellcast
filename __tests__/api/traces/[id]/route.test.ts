@@ -20,17 +20,17 @@ jest.mock('../../../../src/lib/auth', () => ({
 }));
 
 describe('/api/traces/[id]', () => {
-  let GET: any;
-  let PUT: any;
-  let DELETE: any;
-  let testTraces: any[];
+  let GET: (request: Request, context: { params: Promise<{ id: string }> }) => Promise<Response>;
+  let PUT: (request: Request, context: { params: Promise<{ id: string }> }) => Promise<Response>;
+  let DELETE: (request: Request, context: { params: Promise<{ id: string }> }) => Promise<Response>;
+  let testTraces: { id: string; name: string; initialInput: string; events: unknown[]; status: string; agentHint: string }[];
 
   beforeAll(async () => {
     // Import the module after setting up mocks
-    const module = await import('../../../../src/app/api/traces/[id]/route');
-    GET = module.GET;
-    PUT = module.PUT;
-    DELETE = module.DELETE;
+    const routeModule = await import('../../../../src/app/api/traces/[id]/route');
+    GET = routeModule.GET;
+    PUT = routeModule.PUT;
+    DELETE = routeModule.DELETE;
   });
 
   beforeEach(async () => {

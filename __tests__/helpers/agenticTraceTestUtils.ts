@@ -176,10 +176,10 @@ export class MockAgenticTraceFirebaseService {
     let resultTraces = traces;
     if (options.fields && options.fields.length > 0) {
       resultTraces = traces.map(trace => {
-        const projected: any = { id: trace.id };
+        const projected: Record<string, unknown> = { id: trace.id };
         options.fields!.forEach(field => {
           if (field in trace) {
-            projected[field] = (trace as any)[field];
+            projected[field] = (trace as Record<string, unknown>)[field];
           }
         });
         return projected;
@@ -219,7 +219,7 @@ export function createAuthenticatedMockRequest(
   options: {
     method?: string;
     headers?: Record<string, string>;
-    body?: any;
+    body?: unknown;
   } = {}
 ) {
   const defaultHeaders = {

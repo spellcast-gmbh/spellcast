@@ -142,7 +142,7 @@ const myTool: ToolTracing = (t) => tool({
   parameters: z.object({
     param: z.string().describe('Parameter description')
   }),
-  async execute({ param }) {
+  async execute({ param }: { param: string }) {
     // Tool implementation
     return { result: 'success' };
   }

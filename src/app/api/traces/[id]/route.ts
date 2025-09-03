@@ -142,7 +142,7 @@ export async function PUT(
     const body = await request.json();
     
     // Validate ID format first
-    const idValidation = GetTraceRequestSchema.parse({ id: resolvedParams.id });
+    GetTraceRequestSchema.parse({ id: resolvedParams.id });
     
     // Check if this is an event addition request
     if (body.event) {

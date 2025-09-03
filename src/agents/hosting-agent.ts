@@ -23,6 +23,25 @@ import {
   GetProjectsResponseBody 
 } from '@vercel/sdk/models/getprojectsop.js';
 
+// Extended deployment interface to handle missing properties in SDK types
+interface ExtendedDeployment {
+  uid?: string;
+  name?: string;
+  url?: string;
+  state?: string;
+  ready?: boolean;
+  createdAt?: number;
+  creator?: { username?: string };
+  target?: string;
+  source?: string;
+  projectId?: string;
+  regions?: string[];
+  buildingAt?: number;
+  readyAt?: number;
+  functions?: unknown[];
+  id?: string;
+}
+
 class VercelService {
   private vercel: Vercel;
   private cache = new Map<string, unknown>();
@@ -116,19 +135,22 @@ const getDeploymentsTool: ToolTracing = (t) => tool({
     try {
       const response = await vercelService.getDeployments(limit || 20, projectId || undefined);
       
-      const deployments = response.deployments.map((deployment) => ({
-        uid: (deployment as any).uid,
-        name: deployment.name,
-        url: deployment.url,
-        state: (deployment as any).state,
-        ready: deployment.ready,
-        createdAt: deployment.createdAt,
-        creator: deployment.creator?.username || 'Unknown',
-        target: (deployment as any).target,
-        source: (deployment as any).source,
-        projectId: (deployment as any).projectId,
-        regions: (deployment as any).regions || []
-      }));
+      const deployments = response.deployments.map((deployment) => {
+        const d = deployment as ExtendedDeployment;
+        return {
+          uid: d.uid,
+          name: d.name,
+          url: d.url,
+          state: d.state,
+          ready: d.ready,
+          createdAt: d.createdAt,
+          creator: d.creator?.username || 'Unknown',
+          target: d.target,
+          source: d.source,
+          projectId: d.projectId,
+          regions: d.regions || []
+        };
+      });
 
       const result = {
         deployments,
@@ -182,22 +204,23 @@ const getDeploymentStatusTool: ToolTracing = (t) => tool({
     try {
       const deployment = await vercelService.getDeployment(deploymentId);
       
+      const d = deployment as ExtendedDeployment;
       const result = {
-        uid: (deployment as any).uid || deployment.id,
-        name: deployment.name,
-        url: deployment.url,
-        state: (deployment as any).state || 'UNKNOWN',
-        ready: deployment.ready,
-        readyState: deployment.readyState,
-        createdAt: deployment.createdAt,
-        buildingAt: (deployment as any).buildingAt,
-        readyAt: (deployment as any).readyAt,
-        creator: deployment.creator?.username || 'Unknown',
-        target: (deployment as any).target,
-        source: (deployment as any).source,
-        projectId: (deployment as any).projectId,
-        regions: (deployment as any).regions || [],
-        functions: (deployment as any).functions || []
+        uid: d.uid || d.id,
+        name: d.name,
+        url: d.url,
+        state: d.state || 'UNKNOWN',
+        ready: d.ready,
+        readyState: (deployment as { readyState?: string }).readyState,
+        createdAt: d.createdAt,
+        buildingAt: d.buildingAt,
+        readyAt: d.readyAt,
+        creator: d.creator?.username || 'Unknown',
+        target: d.target,
+        source: d.source,
+        projectId: d.projectId,
+        regions: d.regions || [],
+        functions: d.functions || []
       };
 
       await agenticTraceService.addEventToTrace(t.id, {
@@ -209,7 +232,7 @@ const getDeploymentStatusTool: ToolTracing = (t) => tool({
         agent: 'hosting',
         output: result,
         timestamp: new Date().toISOString(),
-        markdown: `Retrieved status for deployment [${deploymentId}](https://${deployment.url}) - State: ${(deployment as any).state || 'UNKNOWN'}`
+        markdown: `Retrieved status for deployment [${deploymentId}](https://${deployment.url}) - State: ${d.state || 'UNKNOWN'}`
       });
 
       return result;
@@ -267,15 +290,19 @@ const getDeploymentLogsTool: ToolTracing = (t) => tool({
         }));
       } else if (logsResponse && typeof logsResponse === 'object' && 'events' in logsResponse) {
         // Handle structured event response
-        const events = (logsResponse as any).events || [];
-        logs = events.slice(0, limit || 100).map((event: any, index: number) => ({
-          id: event.id || `event-${index}`,
-          type: event.type || 'log',
-          created: event.created || Date.now(),
-          text: event.payload?.text || event.payload?.message || event.text || 'No message',
-          source: event.payload?.source || event.source,
-          level: event.payload?.level || event.level || 'info'
-        }));
+        const events = (logsResponse as { events?: unknown[] }).events || [];
+        logs = events.slice(0, limit || 100).map((event: unknown, index: number) => {
+          const e = event as Record<string, unknown>;
+          const payload = e.payload as Record<string, unknown> | undefined;
+          return {
+            id: (e.id as string) || `event-${index}`,
+            type: (e.type as string) || 'log',
+            created: (e.created as number) || Date.now(),
+            text: (payload?.text as string) || (payload?.message as string) || (e.text as string) || 'No message',
+            source: (payload?.source as string) || (e.source as string),
+            level: (payload?.level as string) || (e.level as string) || 'info'
+          };
+        });
       }
 
       const result = {

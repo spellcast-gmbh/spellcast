@@ -22,14 +22,14 @@ jest.mock('../../../src/lib/auth', () => ({
 }));
 
 describe('/api/traces', () => {
-  let POST: any;
-  let GET: any;
+  let POST: (request: Request) => Promise<Response>;
+  let GET: (request: Request) => Promise<Response>;
 
   beforeAll(async () => {
     // Import the module after setting up mocks
-    const module = await import('../../../src/app/api/traces/route');
-    POST = module.POST;
-    GET = module.GET;
+    const routeModule = await import('../../../src/app/api/traces/route');
+    POST = routeModule.POST;
+    GET = routeModule.GET;
   });
 
   beforeEach(async () => {
@@ -218,7 +218,7 @@ describe('/api/traces', () => {
       expect(responseData.data.traces).toHaveLength(3);
       
       // Check that only requested fields are present
-      responseData.data.traces.forEach((trace: any) => {
+      responseData.data.traces.forEach((trace: Record<string, unknown>) => {
         expect(Object.keys(trace)).toEqual(expect.arrayContaining(['id', 'name', 'status']));
         expect(trace).not.toHaveProperty('initialInput');
         expect(trace).not.toHaveProperty('events');
